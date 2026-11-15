@@ -1,9 +1,17 @@
 import type { Metadata, Viewport } from "next";
-import { Source_Sans_3 } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 
-// Source Sans is the open version of the typeface USC's own sign-in uses.
-const sourceSans = Source_Sans_3({ subsets: ["latin"], weight: ["400", "500", "600", "700"], display: "swap", variable: "--font-source" });
+// Source Sans 3 is the open version of the typeface USC's own sign-in uses. The font file is kept in the project
+// (src/app/fonts, SIL Open Font License) instead of being downloaded from Google during the build, because that
+// download failed intermittently on Vercel and failed the whole deployment.
+const sourceSans = localFont({
+  src: "./fonts/SourceSans3-Variable.woff2",
+  weight: "200 900", // one variable file covers every weight the app uses
+  style: "normal",
+  display: "swap",
+  variable: "--font-source",
+});
 
 export const metadata: Metadata = {
   title: "Trojan Rideshare",

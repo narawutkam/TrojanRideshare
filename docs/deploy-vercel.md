@@ -32,7 +32,7 @@ If no Redis is configured, the app still deploys and runs, but data can disappea
 - **Access.** A production URL is public. Anyone with the link can sign in as a demo user, because the password is not checked. Preview deployments are protected by default. To limit a production demo, use **Settings, Deployment Protection** in Vercel. If a Google key is set, anyone using the demo uses your Google quota.
 - **Redis usage.** Each open party chat polls every 3 seconds, and each poll can read Redis. Check your Upstash plan's command limit if chats are left open.
 - **Region.** Functions run in one region by default. If it feels slow, set the region under **Settings, Functions** and keep Redis in the same area.
-- **Fonts.** The build downloads Source Sans from Google Fonts, so it needs normal internet access.
+- **Fonts.** The font (Source Sans 3) is kept in `src/app/fonts`, so the build does not contact Google Fonts. A build that failed with `Cannot read properties of null` inside `next/font/google` was the old download failing; it cannot happen now.
 
 ## Troubleshooting
 
