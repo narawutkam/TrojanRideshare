@@ -85,7 +85,7 @@ export function TripDetailScreen({ tripId }: { tripId: string }) {
             {returnLeg.data && (
               <p className="border-t border-line pt-3 text-sm">
                 <b>Return trip:</b> {formatDateTime(returnLeg.data.trip.departureTime)} back to {returnLeg.data.destination.name}. It has its own seats and signup.{" "}
-                <Link href={`/trips/${returnLeg.data.trip.id}`} className="font-semibold text-cardinal hover:underline">
+                <Link href={`/trips/${returnLeg.data.trip.id}`} className="font-semibold text-link hover:underline">
                   {returnLeg.data.viewerMembership === "confirmed" ? "Open return trip" : "View and join return"} →
                 </Link>
               </p>

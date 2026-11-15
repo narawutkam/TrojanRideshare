@@ -40,7 +40,7 @@ export function TripCard({ view, regionName, actorId, extra, actions }: {
             {trip.participantCount}/{trip.maxParticipants} riders · {trip.status === "full" ? "no seats left" : `${seatsLeft} seat${seatsLeft === 1 ? "" : "s"} left`}
           </p>
         </div>
-        <div className="flex gap-2">{actions ?? <Link href={`/trips/${trip.id}`} className="text-sm font-semibold text-cardinal hover:underline">View trip →</Link>}</div>
+        <div className="flex gap-2">{actions ?? <Link href={`/trips/${trip.id}`} className="text-sm font-semibold text-link hover:underline">View trip →</Link>}</div>
       </div>
     </article>
   );

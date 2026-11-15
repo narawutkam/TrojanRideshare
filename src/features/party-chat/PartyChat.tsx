@@ -62,7 +62,7 @@ export function PartyChat({ tripId, actorId, roster, bookerId, onRosterStale }: 
         <span className="text-xs text-muted">{roster.length} member{roster.length === 1 ? "" : "s"}</span>
       </div>
       <div ref={listRef} className="flex flex-1 flex-col gap-3 overflow-y-auto p-4" aria-live="polite">
-        {hasOlder && <button onClick={loadOlder} className="self-center text-xs font-semibold text-cardinal hover:underline">Load older messages</button>}
+        {hasOlder && <button onClick={loadOlder} className="self-center text-xs font-semibold text-link hover:underline">Load older messages</button>}
         {!messages.length && <p className="m-auto text-sm text-muted">No messages yet. Say hi and confirm where to meet.</p>}
         {messages.map((m) => {
           const mine = m.senderId === actorId;
