@@ -41,6 +41,14 @@ function subMatrix(rm: RouteMatrix, userIds: string[]): RouteMatrix | null {
  * Creating or joining needs drive times, which is an async call. Those methods look the times up
  * first, then re-validate and write in one synchronous step, so the atomicity above still holds.
  */
+/** Trips a rider is in must leave at least this far apart. */
+export const TRIP_GAP_MINUTES = 60;
+
+function tooCloseMessage(otherDeparture: string, verb: "join" | "create"): string {
+  const t = new Date(otherDeparture).toLocaleString("en-US", { timeZone: "America/Los_Angeles", weekday: "short", hour: "numeric", minute: "2-digit" });
+  return `You're already in a trip leaving ${t}. Trips you're in must leave at least an hour apart, so pick a different time or leave that trip before you ${verb} this one.`;
+}
+
 export class TripService {
   private readonly locations: LocationService;
 
@@ -239,7 +247,16 @@ export class TripService {
       .filter((t): t is TripRecord => !!t && (t.status === "open" || t.status === "in_progress") && Date.parse(t.departureTime) > now);
   }
 
-  /** Two legs of one linked trip count as one trip for the one-trip rule. */
+  /**
+   * A rider cannot be in two trips that leave within an hour of each other; trips further apart are fine
+   * (docs/decisions.md D-002). The first existing trip that is too close to `departureTime`, if any.
+   */
+  private tooClose(userId: string, departureTime: string, skip?: (t: TripRecord) => boolean): TripRecord | undefined {
+    const at = Date.parse(departureTime);
+    return this.activeTripsOf(userId).find((t) => !skip?.(t) && Math.abs(Date.parse(t.departureTime) - at) < TRIP_GAP_MINUTES * 60000);
+  }
+
+  /** Two legs of one linked trip are never counted against each other. */
   private linked(a: TripRecord, b: TripRecord): boolean {
     return a.id === b.id || a.returnTripId === b.id || b.returnTripId === a.id;
   }
@@ -293,8 +310,9 @@ export class TripService {
     if (input.returnDepartureTime && Date.parse(input.returnDepartureTime) <= Date.parse(input.departureTime)) {
       throw new AppError("VALIDATION_ERROR", "Return departure must be after the outbound departure.");
     }
-    if (this.activeTripsOf(actorId).length) {
-      throw new AppError("ACTIVE_TRIP_EXISTS", "You're already in an upcoming trip. Leave or cancel it before creating another.");
+    for (const when of [input.departureTime, input.returnDepartureTime]) {
+      const clash = when && this.tooClose(actorId, when);
+      if (clash) throw new AppError("ACTIVE_TRIP_EXISTS", tooCloseMessage(clash.departureTime, "create"));
     }
     return { pickup, destination };
   }
@@ -356,9 +374,8 @@ export class TripService {
     if (this.confirmed(rec.id).length >= rec.maxParticipants) {
       throw new AppError("TRIP_FULL", "This trip is full.");
     }
-    if (this.activeTripsOf(actorId).some((t) => !this.linked(t, rec))) {
-      throw new AppError("ACTIVE_TRIP_EXISTS", "You're already in an upcoming trip. Leave it before joining another.");
-    }
+    const clash = this.tooClose(actorId, rec.departureTime, (t) => this.linked(t, rec));
+    if (clash) throw new AppError("ACTIVE_TRIP_EXISTS", tooCloseMessage(clash.departureTime, "join"));
     const destination = this.resolveDestination(rec, input.destinationLocationId);
     return { kind: "open" as const, rec, existing, destination, rosterKey: this.rosterKey(rec) };
   }

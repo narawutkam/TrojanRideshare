@@ -157,13 +157,27 @@ describe("Leave and cancellation", () => {
   });
 });
 
-describe("One active trip per rider (D-002)", () => {
-  it("blocks a second trip but allows the linked return leg", async () => {
+describe("Trips at least an hour apart (D-002)", () => {
+  it("blocks a trip within an hour of one you are in, but allows the linked return leg", async () => {
     const s = setup();
     await s.trips.joinTrip(s.USER.tommy, TRIP.groveOutbound, s.terms);
-    await expectCode(() => s.trips.joinTrip(s.USER.tommy, TRIP.palladium, s.terms), "ACTIVE_TRIP_EXISTS");
-    await expectCode(() => s.trips.createTrip(s.USER.tommy, { pickupLocationId: LOC.village, destinationLocationId: LOC.lax, departureTime: inHours(4) }), "ACTIVE_TRIP_EXISTS");
+    const base = Date.parse((await s.trips.getTrip(s.USER.tommy, TRIP.groveOutbound)).trip.departureTime);
+    const other = (ms: number) => s.trips.createTrip(s.USER.hannah, { pickupLocationId: LOC.village, destinationLocationId: LOC.lax, departureTime: new Date(base + ms).toISOString() });
+    const near = await other(30 * 60000);
+    const far = await other(30 * 3600000);
+    await expectCode(() => s.trips.joinTrip(s.USER.tommy, near.trip.id, s.terms), "ACTIVE_TRIP_EXISTS");
+    expect((await s.trips.joinTrip(s.USER.tommy, far.trip.id, s.terms)).viewerMembership).toBe("confirmed");
     expect((await s.trips.joinTrip(s.USER.tommy, TRIP.groveReturn, s.terms)).viewerMembership).toBe("confirmed");
+  });
+
+  it("blocks creating a trip within an hour of one you are in, and allows one an hour or more away", async () => {
+    const s = setup();
+    const mine = await s.trips.createTrip(s.USER.tommy, { pickupLocationId: LOC.village, destinationLocationId: LOC.lax, departureTime: inHours(48) });
+    const at = Date.parse(mine.trip.departureTime);
+    const input = (ms: number) => ({ pickupLocationId: LOC.village, destinationLocationId: LOC.lax, departureTime: new Date(at + ms).toISOString() });
+    await expectCode(() => s.trips.createTrip(s.USER.tommy, input(30 * 60000)), "ACTIVE_TRIP_EXISTS");
+    await expectCode(() => s.trips.createTrip(s.USER.tommy, input(-59 * 60000)), "ACTIVE_TRIP_EXISTS");
+    expect((await s.trips.createTrip(s.USER.tommy, input(60 * 60000))).trip.bookerId).toBe(s.USER.tommy);
   });
 });
 

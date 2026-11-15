@@ -121,7 +121,7 @@ Error codes include `ROUTE_DETOUR_EXCEEDED`, `ACTIVE_TRIP_EXISTS`, `LEAVE_WINDOW
 
 ## Rules the app enforces
 
-A rider can be in one upcoming trip at a time (a trip and its return count as one). Riders cannot leave within an hour of departure. A destination must be inside one of the 24 regions (on return legs, a campus drop-off). Trips hold at most 4 riders. Only the Booker can cancel or file no-show reports. Chat is limited to current members.
+A rider can be in several upcoming trips as long as no two depart within an hour of each other (a trip and its return are never counted against each other). Riders cannot leave within an hour of departure. A destination must be inside one of the 24 regions (on return legs, a campus drop-off). Trips hold at most 4 riders. Only the Booker can cancel or file no-show reports. Chat is limited to current members.
 
 ## Decisions that still need an owner
 
