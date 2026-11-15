@@ -7,6 +7,9 @@ import { api } from "@/lib/client/api";
 import { useCurrentUser } from "@/lib/client/hooks";
 import type { HealthInfo } from "@/types";
 
+/** One health lookup per browser tab session, shared by every page. */
+let healthOnce: Promise<HealthInfo | null> | null = null;
+
 const TABS = [
   { href: "/trips", label: "Find", icon: <path d="M10.5 18a7.5 7.5 0 1 1 5.3-2.2L21 21" /> },
   { href: "/create", label: "Create", icon: <path d="M12 5v14M5 12h14" /> },
@@ -27,10 +30,12 @@ export function AppShell({ children, title, subtitle, back }: {
   const [health, setHealth] = useState<HealthInfo | null>(null);
   const [testing, setTesting] = useState(false);
 
-  // What this deployment is connected to, shown in the account menu so a missing key is easy to spot.
+  // What this deployment is connected to. Loaded once per page so the demo line can warn when shared storage is off,
+  // and shown in the account menu so a missing key is easy to spot.
   useEffect(() => {
-    if (menu && !health) api.health().then(setHealth).catch(() => {});
-  }, [menu, health]);
+    healthOnce ??= api.health().catch(() => null);
+    healthOnce.then((h) => { if (h) setHealth(h); });
+  }, []);
 
   async function testGoogle() {
     setTesting(true);
@@ -92,7 +97,10 @@ export function AppShell({ children, title, subtitle, back }: {
           )}
         </div>
         <p className="border-t border-l-4 border-t-line border-l-info bg-[#f3f6fb] px-4 py-1.5 text-[13px] text-ink">
-          <b className="font-semibold">Demo.</b> Simulated sign-in and places. No payments.
+          <b className="font-semibold">Demo.</b>{" "}
+          {health && health.environment && !health.sharedDataConfigured
+            ? "Shared storage is not set up on this site, so searches and joins can disappear between taps."
+            : "Simulated sign-in and places. No payments."}
         </p>
       </header>
 

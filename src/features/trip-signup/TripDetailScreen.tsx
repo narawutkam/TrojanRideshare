@@ -27,6 +27,9 @@ export function TripDetailScreen({ tripId }: { tripId: string }) {
   // Arriving from a destination search: the place the rider searched for is the stop to join with.
   const stopId = params.get("stop");
   const presetStop = useLoad(async () => (stopId ? api.getLocation(stopId).catch(() => null) : null), [stopId]);
+  // The searched place could not be reopened (for example another server answered and never saw the search). Never fall
+  // back to the trip's own destination in that case: the rider would join to a stop they did not choose.
+  const lostStop = !!stopId && !presetStop.loading && !presetStop.data;
   // The route as it would be with the rider's stop in it, reported by the join panel while they pick a stop.
   const [preview, setPreview] = useState<TripRoute | null>(null);
 
@@ -130,7 +133,7 @@ export function TripDetailScreen({ tripId }: { tripId: string }) {
         {!isMember && trip.status !== "cancelled" && (
           stopId && presetStop.loading
             ? <Loading label="Loading your stop…" />
-            : <JoinPanel key={presetStop.data?.id ?? "trip-destination"} view={v} terms={terms.data} onJoined={setView} departed={departed} initialStop={presetStop.data} onPreview={setPreview} />
+            : <JoinPanel key={presetStop.data?.id ?? "trip-destination"} view={v} terms={terms.data} onJoined={setView} departed={departed} initialStop={presetStop.data} startEmpty={lostStop} onPreview={setPreview} />
         )}
 
         {isMember && roster ? (
@@ -191,17 +194,19 @@ function FareCard({ pricing, meId, bookerName, isMember }: { pricing: RoutePrici
   );
 }
 
-function JoinPanel({ view, terms, onJoined, departed, initialStop, onPreview }: {
+function JoinPanel({ view, terms, onJoined, departed, initialStop, startEmpty = false, onPreview }: {
   view: TripView; terms: AgreementTerms | null; onJoined: (v: TripView) => void; departed: boolean;
   /** The place the rider searched for. Without one, the panel starts with the trip's own destination. */
   initialStop?: Location | null;
+  /** The rider arrived with a searched place that could not be loaded: start with no stop chosen instead of the trip's destination. */
+  startEmpty?: boolean;
   /** Told the route with the rider's stop in it whenever the chosen stop fits, or null when it does not. */
   onPreview: (route: TripRoute | null) => void;
 }) {
   const { trip, pickup, destination } = view;
   const regions = useRegions();
   const pickups = useLoad(() => api.pickups(), []);
-  const [stop, setStop] = useState<Location | null>(initialStop ?? destination);
+  const [stop, setStop] = useState<Location | null>(initialStop ?? (startEmpty ? null : destination));
   const [accepted, setAccepted] = useState(false);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<ApiError | null>(null);
@@ -252,7 +257,11 @@ function JoinPanel({ view, terms, onJoined, departed, initialStop, onPreview }: 
         <p className="mt-1 text-sm text-muted">Meet at {pickup.name} at {formatTime(trip.departureTime)}.</p>
       </div>
 
-      <Field label="Where are you getting out?" htmlFor="stop" hint={isReturn ? undefined : "Defaults to this trip's destination. Pick another place on the way if you like."}>
+      {startEmpty && !stop && (
+        <Notice tone="warn">We couldn&apos;t reopen the place you searched for. Search for your stop below, and the route above will update.</Notice>
+      )}
+
+      <Field label="Where are you getting out?" htmlFor="stop" hint={isReturn ? undefined : startEmpty ? "Search for the place where you want to get out." : "Defaults to this trip's destination. Pick another place on the way if you like."}>
         {isReturn ? (
           <select id="stop" className={inputClass} value={stop?.id ?? ""} onChange={(e) => setStop(pickups.data?.find((p) => p.id === e.target.value) ?? null)}>
             {[destination, ...returnChoices.filter((p) => p.id !== destination.id)].map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
