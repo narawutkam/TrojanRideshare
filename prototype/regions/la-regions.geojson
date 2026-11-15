@@ -1,0 +1,1007 @@
+{
+    "type": "FeatureCollection",
+    "features": [
+        {
+            "type": "Feature",
+            "properties": {
+                "id": "dtla",
+                "name": "Downtown LA",
+                "landmarks": [
+                    "Crypto.com Arena",
+                    "L.A. Live",
+                    "Grand Central Market",
+                    "The Broad",
+                    "Pershing Square"
+                ]
+            },
+            "geometry": {
+                "type": "Polygon",
+                "coordinates": [
+                    [
+                        [
+                            -118.276,
+                            34.034
+                        ],
+                        [
+                            -118.244,
+                            34.034
+                        ],
+                        [
+                            -118.244,
+                            34.058
+                        ],
+                        [
+                            -118.25,
+                            34.064
+                        ],
+                        [
+                            -118.262,
+                            34.064
+                        ],
+                        [
+                            -118.276,
+                            34.055
+                        ],
+                        [
+                            -118.276,
+                            34.034
+                        ]
+                    ]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "id": "arts-district",
+                "name": "Arts District / Little Tokyo",
+                "landmarks": [
+                    "Little Tokyo",
+                    "Arts District breweries",
+                    "Row DTLA",
+                    "Hauser & Wirth"
+                ]
+            },
+            "geometry": {
+                "type": "Polygon",
+                "coordinates": [
+                    [
+                        [
+                            -118.244,
+                            34.03
+                        ],
+                        [
+                            -118.226,
+                            34.03
+                        ],
+                        [
+                            -118.226,
+                            34.058
+                        ],
+                        [
+                            -118.244,
+                            34.058
+                        ],
+                        [
+                            -118.244,
+                            34.03
+                        ]
+                    ]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "id": "chinatown",
+                "name": "Chinatown / Dodger Stadium",
+                "landmarks": [
+                    "Dodger Stadium",
+                    "Chinatown Central Plaza",
+                    "Olvera Street",
+                    "Union Station"
+                ]
+            },
+            "geometry": {
+                "type": "Polygon",
+                "coordinates": [
+                    [
+                        [
+                            -118.25,
+                            34.064
+                        ],
+                        [
+                            -118.244,
+                            34.058
+                        ],
+                        [
+                            -118.226,
+                            34.058
+                        ],
+                        [
+                            -118.226,
+                            34.085
+                        ],
+                        [
+                            -118.25,
+                            34.085
+                        ],
+                        [
+                            -118.25,
+                            34.064
+                        ]
+                    ]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "id": "koreatown",
+                "name": "Koreatown",
+                "landmarks": [
+                    "Wilshire/Western",
+                    "Koreatown Plaza",
+                    "The Wiltern",
+                    "BCD Tofu House"
+                ]
+            },
+            "geometry": {
+                "type": "Polygon",
+                "coordinates": [
+                    [
+                        [
+                            -118.315,
+                            34.045
+                        ],
+                        [
+                            -118.285,
+                            34.045
+                        ],
+                        [
+                            -118.285,
+                            34.077
+                        ],
+                        [
+                            -118.315,
+                            34.077
+                        ],
+                        [
+                            -118.315,
+                            34.045
+                        ]
+                    ]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "id": "echo-park-silver-lake",
+                "name": "Echo Park / Silver Lake",
+                "landmarks": [
+                    "Echo Park Lake",
+                    "Silver Lake Reservoir",
+                    "Sunset Junction",
+                    "The Echo"
+                ]
+            },
+            "geometry": {
+                "type": "Polygon",
+                "coordinates": [
+                    [
+                        [
+                            -118.285,
+                            34.068
+                        ],
+                        [
+                            -118.25,
+                            34.068
+                        ],
+                        [
+                            -118.25,
+                            34.097
+                        ],
+                        [
+                            -118.285,
+                            34.097
+                        ],
+                        [
+                            -118.285,
+                            34.068
+                        ]
+                    ]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "id": "los-feliz",
+                "name": "Los Feliz / Griffith Park",
+                "landmarks": [
+                    "Griffith Observatory",
+                    "Greek Theatre",
+                    "Vermont Ave shops"
+                ]
+            },
+            "geometry": {
+                "type": "Polygon",
+                "coordinates": [
+                    [
+                        [
+                            -118.305,
+                            34.097
+                        ],
+                        [
+                            -118.27,
+                            34.097
+                        ],
+                        [
+                            -118.27,
+                            34.13
+                        ],
+                        [
+                            -118.305,
+                            34.13
+                        ],
+                        [
+                            -118.305,
+                            34.097
+                        ]
+                    ]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "id": "hollywood",
+                "name": "Hollywood",
+                "landmarks": [
+                    "Hollywood & Highland",
+                    "Walk of Fame",
+                    "TCL Chinese Theatre",
+                    "Hollywood Bowl",
+                    "Hollywood Palladium"
+                ]
+            },
+            "geometry": {
+                "type": "Polygon",
+                "coordinates": [
+                    [
+                        [
+                            -118.345,
+                            34.09
+                        ],
+                        [
+                            -118.305,
+                            34.09
+                        ],
+                        [
+                            -118.305,
+                            34.12
+                        ],
+                        [
+                            -118.345,
+                            34.12
+                        ],
+                        [
+                            -118.345,
+                            34.09
+                        ]
+                    ]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "id": "west-hollywood",
+                "name": "West Hollywood",
+                "landmarks": [
+                    "Sunset Strip",
+                    "Santa Monica Blvd",
+                    "The Abbey",
+                    "Pacific Design Center",
+                    "Melrose Place"
+                ]
+            },
+            "geometry": {
+                "type": "Polygon",
+                "coordinates": [
+                    [
+                        [
+                            -118.396,
+                            34.074
+                        ],
+                        [
+                            -118.37,
+                            34.074
+                        ],
+                        [
+                            -118.37,
+                            34.09
+                        ],
+                        [
+                            -118.345,
+                            34.09
+                        ],
+                        [
+                            -118.345,
+                            34.104
+                        ],
+                        [
+                            -118.396,
+                            34.104
+                        ],
+                        [
+                            -118.396,
+                            34.074
+                        ]
+                    ]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "id": "melrose-fairfax",
+                "name": "Melrose / Fairfax",
+                "landmarks": [
+                    "Melrose Ave shops",
+                    "The Grove",
+                    "Original Farmers Market",
+                    "Fairfax Ave"
+                ]
+            },
+            "geometry": {
+                "type": "Polygon",
+                "coordinates": [
+                    [
+                        [
+                            -118.37,
+                            34.068
+                        ],
+                        [
+                            -118.338,
+                            34.068
+                        ],
+                        [
+                            -118.338,
+                            34.09
+                        ],
+                        [
+                            -118.37,
+                            34.09
+                        ],
+                        [
+                            -118.37,
+                            34.068
+                        ]
+                    ]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "id": "miracle-mile",
+                "name": "Miracle Mile / Mid-Wilshire",
+                "landmarks": [
+                    "LACMA",
+                    "Academy Museum",
+                    "La Brea Tar Pits",
+                    "Petersen Automotive Museum"
+                ]
+            },
+            "geometry": {
+                "type": "Polygon",
+                "coordinates": [
+                    [
+                        [
+                            -118.375,
+                            34.052
+                        ],
+                        [
+                            -118.33,
+                            34.052
+                        ],
+                        [
+                            -118.33,
+                            34.068
+                        ],
+                        [
+                            -118.375,
+                            34.068
+                        ],
+                        [
+                            -118.375,
+                            34.052
+                        ]
+                    ]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "id": "beverly-hills",
+                "name": "Beverly Hills",
+                "landmarks": [
+                    "Rodeo Drive",
+                    "Beverly Center",
+                    "Beverly Gardens Park"
+                ]
+            },
+            "geometry": {
+                "type": "Polygon",
+                "coordinates": [
+                    [
+                        [
+                            -118.428,
+                            34.062
+                        ],
+                        [
+                            -118.408,
+                            34.062
+                        ],
+                        [
+                            -118.408,
+                            34.056
+                        ],
+                        [
+                            -118.396,
+                            34.056
+                        ],
+                        [
+                            -118.396,
+                            34.09
+                        ],
+                        [
+                            -118.428,
+                            34.09
+                        ],
+                        [
+                            -118.428,
+                            34.062
+                        ]
+                    ]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "id": "century-city",
+                "name": "Century City",
+                "landmarks": [
+                    "Westfield Century City"
+                ]
+            },
+            "geometry": {
+                "type": "Polygon",
+                "coordinates": [
+                    [
+                        [
+                            -118.428,
+                            34.048
+                        ],
+                        [
+                            -118.408,
+                            34.048
+                        ],
+                        [
+                            -118.408,
+                            34.062
+                        ],
+                        [
+                            -118.428,
+                            34.062
+                        ],
+                        [
+                            -118.428,
+                            34.048
+                        ]
+                    ]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "id": "westwood",
+                "name": "Westwood / UCLA",
+                "landmarks": [
+                    "UCLA",
+                    "Westwood Village",
+                    "Hammer Museum",
+                    "Getty Center (via 405)"
+                ]
+            },
+            "geometry": {
+                "type": "Polygon",
+                "coordinates": [
+                    [
+                        [
+                            -118.46,
+                            34.052
+                        ],
+                        [
+                            -118.428,
+                            34.052
+                        ],
+                        [
+                            -118.428,
+                            34.078
+                        ],
+                        [
+                            -118.46,
+                            34.078
+                        ],
+                        [
+                            -118.46,
+                            34.052
+                        ]
+                    ]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "id": "sawtelle",
+                "name": "Sawtelle Japantown",
+                "landmarks": [
+                    "Sawtelle Blvd restaurants",
+                    "Tsujita",
+                    "Daiso"
+                ]
+            },
+            "geometry": {
+                "type": "Polygon",
+                "coordinates": [
+                    [
+                        [
+                            -118.455,
+                            34.025
+                        ],
+                        [
+                            -118.435,
+                            34.025
+                        ],
+                        [
+                            -118.435,
+                            34.05
+                        ],
+                        [
+                            -118.455,
+                            34.05
+                        ],
+                        [
+                            -118.455,
+                            34.025
+                        ]
+                    ]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "id": "culver-city",
+                "name": "Culver City",
+                "landmarks": [
+                    "Downtown Culver City",
+                    "Platform",
+                    "Sony Pictures Studios",
+                    "Culver Steps"
+                ]
+            },
+            "geometry": {
+                "type": "Polygon",
+                "coordinates": [
+                    [
+                        [
+                            -118.415,
+                            34.005
+                        ],
+                        [
+                            -118.375,
+                            34.005
+                        ],
+                        [
+                            -118.375,
+                            34.03
+                        ],
+                        [
+                            -118.415,
+                            34.03
+                        ],
+                        [
+                            -118.415,
+                            34.005
+                        ]
+                    ]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "id": "santa-monica",
+                "name": "Santa Monica",
+                "landmarks": [
+                    "Santa Monica Pier",
+                    "Third Street Promenade",
+                    "Main Street",
+                    "Santa Monica Place"
+                ]
+            },
+            "geometry": {
+                "type": "Polygon",
+                "coordinates": [
+                    [
+                        [
+                            -118.525,
+                            34.04
+                        ],
+                        [
+                            -118.455,
+                            34.04
+                        ],
+                        [
+                            -118.455,
+                            34.005
+                        ],
+                        [
+                            -118.48,
+                            33.998
+                        ],
+                        [
+                            -118.495,
+                            33.998
+                        ],
+                        [
+                            -118.525,
+                            34.028
+                        ],
+                        [
+                            -118.525,
+                            34.04
+                        ]
+                    ]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "id": "venice",
+                "name": "Venice",
+                "landmarks": [
+                    "Venice Beach Boardwalk",
+                    "Abbot Kinney Blvd",
+                    "Venice Canals",
+                    "Muscle Beach"
+                ]
+            },
+            "geometry": {
+                "type": "Polygon",
+                "coordinates": [
+                    [
+                        [
+                            -118.495,
+                            33.998
+                        ],
+                        [
+                            -118.48,
+                            33.998
+                        ],
+                        [
+                            -118.455,
+                            34.005
+                        ],
+                        [
+                            -118.445,
+                            33.995
+                        ],
+                        [
+                            -118.455,
+                            33.98
+                        ],
+                        [
+                            -118.485,
+                            33.978
+                        ],
+                        [
+                            -118.495,
+                            33.998
+                        ]
+                    ]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "id": "marina-del-rey",
+                "name": "Marina del Rey",
+                "landmarks": [
+                    "Fisherman's Village",
+                    "Mother's Beach",
+                    "Marina harbor"
+                ]
+            },
+            "geometry": {
+                "type": "Polygon",
+                "coordinates": [
+                    [
+                        [
+                            -118.485,
+                            33.978
+                        ],
+                        [
+                            -118.455,
+                            33.98
+                        ],
+                        [
+                            -118.445,
+                            33.995
+                        ],
+                        [
+                            -118.425,
+                            33.99
+                        ],
+                        [
+                            -118.43,
+                            33.965
+                        ],
+                        [
+                            -118.47,
+                            33.96
+                        ],
+                        [
+                            -118.485,
+                            33.978
+                        ]
+                    ]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "id": "south-bay",
+                "name": "Manhattan / Hermosa Beach",
+                "landmarks": [
+                    "Manhattan Beach Pier",
+                    "Hermosa Beach Pier",
+                    "Pier Ave"
+                ]
+            },
+            "geometry": {
+                "type": "Polygon",
+                "coordinates": [
+                    [
+                        [
+                            -118.43,
+                            33.905
+                        ],
+                        [
+                            -118.385,
+                            33.905
+                        ],
+                        [
+                            -118.375,
+                            33.85
+                        ],
+                        [
+                            -118.41,
+                            33.85
+                        ],
+                        [
+                            -118.43,
+                            33.905
+                        ]
+                    ]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "id": "lax",
+                "name": "LAX",
+                "landmarks": [
+                    "LAX terminals",
+                    "LAX-it lot"
+                ]
+            },
+            "geometry": {
+                "type": "Polygon",
+                "coordinates": [
+                    [
+                        [
+                            -118.435,
+                            33.928
+                        ],
+                        [
+                            -118.375,
+                            33.928
+                        ],
+                        [
+                            -118.375,
+                            33.955
+                        ],
+                        [
+                            -118.435,
+                            33.955
+                        ],
+                        [
+                            -118.435,
+                            33.928
+                        ]
+                    ]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "id": "inglewood",
+                "name": "Inglewood (SoFi / Forum)",
+                "landmarks": [
+                    "SoFi Stadium",
+                    "Kia Forum",
+                    "Intuit Dome",
+                    "YouTube Theater"
+                ]
+            },
+            "geometry": {
+                "type": "Polygon",
+                "coordinates": [
+                    [
+                        [
+                            -118.365,
+                            33.935
+                        ],
+                        [
+                            -118.32,
+                            33.935
+                        ],
+                        [
+                            -118.32,
+                            33.975
+                        ],
+                        [
+                            -118.365,
+                            33.975
+                        ],
+                        [
+                            -118.365,
+                            33.935
+                        ]
+                    ]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "id": "universal-city",
+                "name": "Universal City / Studio City",
+                "landmarks": [
+                    "Universal Studios Hollywood",
+                    "Universal CityWalk",
+                    "Ventura Blvd"
+                ]
+            },
+            "geometry": {
+                "type": "Polygon",
+                "coordinates": [
+                    [
+                        [
+                            -118.39,
+                            34.13
+                        ],
+                        [
+                            -118.34,
+                            34.13
+                        ],
+                        [
+                            -118.34,
+                            34.15
+                        ],
+                        [
+                            -118.39,
+                            34.15
+                        ],
+                        [
+                            -118.39,
+                            34.13
+                        ]
+                    ]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "id": "glendale",
+                "name": "Glendale",
+                "landmarks": [
+                    "The Americana at Brand",
+                    "Glendale Galleria"
+                ]
+            },
+            "geometry": {
+                "type": "Polygon",
+                "coordinates": [
+                    [
+                        [
+                            -118.27,
+                            34.135
+                        ],
+                        [
+                            -118.235,
+                            34.135
+                        ],
+                        [
+                            -118.235,
+                            34.16
+                        ],
+                        [
+                            -118.27,
+                            34.16
+                        ],
+                        [
+                            -118.27,
+                            34.135
+                        ]
+                    ]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "id": "pasadena",
+                "name": "Pasadena",
+                "landmarks": [
+                    "Old Pasadena",
+                    "Rose Bowl",
+                    "Caltech",
+                    "Norton Simon Museum"
+                ]
+            },
+            "geometry": {
+                "type": "Polygon",
+                "coordinates": [
+                    [
+                        [
+                            -118.18,
+                            34.125
+                        ],
+                        [
+                            -118.11,
+                            34.125
+                        ],
+                        [
+                            -118.11,
+                            34.17
+                        ],
+                        [
+                            -118.18,
+                            34.17
+                        ],
+                        [
+                            -118.18,
+                            34.125
+                        ]
+                    ]
+                ]
+            }
+        }
+    ]
+}

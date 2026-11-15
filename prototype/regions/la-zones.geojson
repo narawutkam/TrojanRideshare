@@ -1,0 +1,797 @@
+{
+    "type": "FeatureCollection",
+    "features": [
+        {
+            "type": "Feature",
+            "properties": {
+                "id": "la-live",
+                "name": "L.A. Live / Crypto.com Arena",
+                "area": "downtown",
+                "walkRadiusKm": 0.8,
+                "landmarks": [
+                    "Crypto.com Arena",
+                    "Peacock Theater",
+                    "LA Convention Center"
+                ]
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -118.2665,
+                    34.0441
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "id": "dtla-core",
+                "name": "Grand Central Market / Bunker Hill",
+                "area": "downtown",
+                "walkRadiusKm": 0.8,
+                "landmarks": [
+                    "Grand Central Market",
+                    "The Broad",
+                    "Walt Disney Concert Hall",
+                    "Pershing Square",
+                    "Bradbury Building"
+                ]
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -118.2505,
+                    34.0515
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "id": "little-tokyo",
+                "name": "Little Tokyo",
+                "area": "downtown",
+                "walkRadiusKm": 0.8,
+                "landmarks": [
+                    "Japanese Village Plaza",
+                    "Japanese American National Museum",
+                    "Geffen Contemporary"
+                ]
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -118.24,
+                    34.0498
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "id": "arts-district",
+                "name": "Arts District",
+                "area": "downtown",
+                "walkRadiusKm": 0.8,
+                "landmarks": [
+                    "Hauser & Wirth",
+                    "Angel City Brewery"
+                ]
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -118.2335,
+                    34.043
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "id": "chinatown",
+                "name": "Chinatown / Union Station",
+                "area": "downtown",
+                "walkRadiusKm": 0.8,
+                "landmarks": [
+                    "Chinatown Central Plaza",
+                    "Olvera Street",
+                    "Union Station"
+                ]
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -118.238,
+                    34.0605
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "id": "dodger-stadium",
+                "name": "Dodger Stadium",
+                "area": "downtown",
+                "walkRadiusKm": 0.8,
+                "landmarks": [
+                    "Dodger Stadium"
+                ]
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -118.24,
+                    34.0739
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "id": "ktown-west",
+                "name": "Koreatown (Wilshire / Western)",
+                "area": "central",
+                "walkRadiusKm": 0.8,
+                "landmarks": [
+                    "The Wiltern",
+                    "Koreatown Plaza"
+                ]
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -118.3075,
+                    34.0605
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "id": "ktown-east",
+                "name": "Koreatown (6th St)",
+                "area": "central",
+                "walkRadiusKm": 0.8,
+                "landmarks": [
+                    "6th St restaurants & bars",
+                    "The Line Hotel"
+                ]
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -118.3,
+                    34.0636
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "id": "echo-park",
+                "name": "Echo Park",
+                "area": "central",
+                "walkRadiusKm": 0.8,
+                "landmarks": [
+                    "Echo Park Lake",
+                    "The Echo"
+                ]
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -118.26,
+                    34.076
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "id": "silver-lake",
+                "name": "Silver Lake (Sunset Junction)",
+                "area": "central",
+                "walkRadiusKm": 0.8,
+                "landmarks": [
+                    "Sunset Junction"
+                ]
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -118.277,
+                    34.0895
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "id": "los-feliz",
+                "name": "Los Feliz Village",
+                "area": "central",
+                "walkRadiusKm": 0.8,
+                "landmarks": [
+                    "Vermont Ave shops / Skylight Books"
+                ]
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -118.2917,
+                    34.1045
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "id": "griffith",
+                "name": "Griffith Observatory / Greek Theatre",
+                "area": "central",
+                "walkRadiusKm": 0.8,
+                "landmarks": [
+                    "Griffith Observatory",
+                    "Greek Theatre"
+                ]
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -118.2985,
+                    34.119
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "id": "hollywood-highland",
+                "name": "Hollywood & Highland",
+                "area": "hollywood",
+                "walkRadiusKm": 0.8,
+                "landmarks": [
+                    "Ovation Hollywood",
+                    "TCL Chinese Theatre",
+                    "Dolby Theatre",
+                    "El Capitan Theatre"
+                ]
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -118.3387,
+                    34.1017
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "id": "hollywood-vine",
+                "name": "Hollywood & Vine",
+                "area": "hollywood",
+                "walkRadiusKm": 0.8,
+                "landmarks": [
+                    "Capitol Records",
+                    "Pantages Theatre",
+                    "Hollywood Palladium",
+                    "Avalon Hollywood"
+                ]
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -118.326,
+                    34.1015
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "id": "hollywood-bowl",
+                "name": "Hollywood Bowl",
+                "area": "hollywood",
+                "walkRadiusKm": 0.8,
+                "landmarks": [
+                    "Hollywood Bowl"
+                ]
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -118.3391,
+                    34.1122
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "id": "sunset-strip",
+                "name": "Sunset Strip",
+                "area": "weho",
+                "walkRadiusKm": 0.8,
+                "landmarks": [
+                    "Whisky a Go Go",
+                    "The Roxy",
+                    "The Comedy Store"
+                ]
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -118.381,
+                    34.092
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "id": "weho-sm-blvd",
+                "name": "WeHo (Santa Monica Blvd)",
+                "area": "weho",
+                "walkRadiusKm": 0.8,
+                "landmarks": [
+                    "The Abbey",
+                    "Pacific Design Center"
+                ]
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -118.3835,
+                    34.0845
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "id": "beverly-center",
+                "name": "Beverly Center",
+                "area": "weho",
+                "walkRadiusKm": 0.8,
+                "landmarks": [
+                    "Beverly Center"
+                ]
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -118.377,
+                    34.075
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "id": "melrose",
+                "name": "Melrose Ave (Fairfax)",
+                "area": "mid-city",
+                "walkRadiusKm": 0.8,
+                "landmarks": [
+                    "Melrose & Fairfax",
+                    "Melrose Trading Post",
+                    "Melrose shops (Stanley-Martel)"
+                ]
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -118.357,
+                    34.0837
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "id": "the-grove",
+                "name": "The Grove / Farmers Market",
+                "area": "mid-city",
+                "walkRadiusKm": 0.8,
+                "landmarks": [
+                    "The Grove",
+                    "Original Farmers Market"
+                ]
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -118.3585,
+                    34.0718
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "id": "miracle-mile",
+                "name": "LACMA / Museum Row",
+                "area": "mid-city",
+                "walkRadiusKm": 0.8,
+                "landmarks": [
+                    "LACMA",
+                    "Academy Museum",
+                    "La Brea Tar Pits",
+                    "Petersen Automotive Museum"
+                ]
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -118.359,
+                    34.063
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "id": "rodeo",
+                "name": "Rodeo Drive",
+                "area": "westside",
+                "walkRadiusKm": 0.8,
+                "landmarks": [
+                    "Rodeo Drive",
+                    "Beverly Wilshire",
+                    "Beverly Gardens Park"
+                ]
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -118.402,
+                    34.069
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "id": "century-city",
+                "name": "Century City",
+                "area": "westside",
+                "walkRadiusKm": 0.8,
+                "landmarks": [
+                    "Westfield Century City"
+                ]
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -118.4189,
+                    34.0583
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "id": "westwood-village",
+                "name": "Westwood Village",
+                "area": "westside",
+                "walkRadiusKm": 0.8,
+                "landmarks": [
+                    "Westwood Village",
+                    "Hammer Museum"
+                ]
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -118.4465,
+                    34.0615
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "id": "ucla",
+                "name": "UCLA Campus",
+                "area": "westside",
+                "walkRadiusKm": 0.8,
+                "landmarks": [
+                    "Royce Hall",
+                    "Ackerman Union",
+                    "Pauley Pavilion"
+                ]
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -118.443,
+                    34.0705
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "id": "sawtelle",
+                "name": "Sawtelle Japantown",
+                "area": "westside",
+                "walkRadiusKm": 0.8,
+                "landmarks": [
+                    "Tsujita",
+                    "Sawtelle & Olympic"
+                ]
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -118.4428,
+                    34.0395
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "id": "culver-city",
+                "name": "Downtown Culver City",
+                "area": "westside",
+                "walkRadiusKm": 0.8,
+                "landmarks": [
+                    "Culver Steps",
+                    "Platform"
+                ]
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -118.3925,
+                    34.025
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "id": "sm-pier",
+                "name": "Santa Monica Pier / Promenade",
+                "area": "beaches",
+                "walkRadiusKm": 0.8,
+                "landmarks": [
+                    "Santa Monica Pier",
+                    "Third Street Promenade",
+                    "Santa Monica Place"
+                ]
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -118.4955,
+                    34.013
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "id": "sm-main-st",
+                "name": "Main Street Santa Monica",
+                "area": "beaches",
+                "walkRadiusKm": 0.8,
+                "landmarks": [
+                    "Main St & Ocean Park"
+                ]
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -118.4835,
+                    34.002
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "id": "venice",
+                "name": "Venice Beach / Abbot Kinney",
+                "area": "beaches",
+                "walkRadiusKm": 0.8,
+                "landmarks": [
+                    "Venice Boardwalk (Windward)",
+                    "Abbot Kinney Blvd",
+                    "Venice Canals",
+                    "Muscle Beach"
+                ]
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -118.47,
+                    33.988
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "id": "marina-del-rey",
+                "name": "Marina del Rey",
+                "area": "beaches",
+                "walkRadiusKm": 0.8,
+                "landmarks": [
+                    "Fisherman's Village",
+                    "Mother's Beach"
+                ]
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -118.45,
+                    33.9765
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "id": "manhattan-beach",
+                "name": "Manhattan Beach Pier",
+                "area": "south-bay",
+                "walkRadiusKm": 0.8,
+                "landmarks": [
+                    "Manhattan Beach Pier",
+                    "Downtown Manhattan Beach"
+                ]
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -118.4095,
+                    33.885
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "id": "hermosa-beach",
+                "name": "Hermosa Beach Pier",
+                "area": "south-bay",
+                "walkRadiusKm": 0.8,
+                "landmarks": [
+                    "Hermosa Beach Pier",
+                    "Pier Ave"
+                ]
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -118.399,
+                    33.8622
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "id": "lax",
+                "name": "LAX Terminals",
+                "area": "south",
+                "walkRadiusKm": 0.8,
+                "landmarks": [
+                    "Tom Bradley Intl Terminal",
+                    "Terminal 1"
+                ]
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -118.4081,
+                    33.9425
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "id": "sofi",
+                "name": "SoFi / Kia Forum / Intuit Dome",
+                "area": "south",
+                "walkRadiusKm": 0.8,
+                "landmarks": [
+                    "SoFi Stadium",
+                    "Kia Forum",
+                    "Intuit Dome"
+                ]
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -118.341,
+                    33.952
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "id": "universal",
+                "name": "Universal CityWalk",
+                "area": "north",
+                "walkRadiusKm": 0.8,
+                "landmarks": [
+                    "Universal CityWalk",
+                    "Universal Studios entrance"
+                ]
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -118.353,
+                    34.1365
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "id": "glendale",
+                "name": "Americana at Brand",
+                "area": "north",
+                "walkRadiusKm": 0.8,
+                "landmarks": [
+                    "The Americana at Brand",
+                    "Glendale Galleria"
+                ]
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -118.2565,
+                    34.146
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "id": "old-pasadena",
+                "name": "Old Pasadena",
+                "area": "north",
+                "walkRadiusKm": 0.8,
+                "landmarks": [
+                    "Colorado & Fair Oaks",
+                    "Norton Simon Museum"
+                ]
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -118.153,
+                    34.1458
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "id": "rose-bowl",
+                "name": "Rose Bowl",
+                "area": "north",
+                "walkRadiusKm": 0.8,
+                "landmarks": [
+                    "Rose Bowl"
+                ]
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -118.1676,
+                    34.1613
+                ]
+            }
+        }
+    ]
+}

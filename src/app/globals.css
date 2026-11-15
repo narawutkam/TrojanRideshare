@@ -1,26 +1,41 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* USC color direction, neutral surfaces, minimal rounding (README R10, §2). */
+@theme {
+  --color-cardinal: #990000;
+  --color-cardinal-dark: #7a0000;
+  --color-gold: #ffcc00;
+  --color-surface: #ffffff;
+  --color-canvas: #f7f6f3;
+  --color-ink: #1b1b1b;
+  --color-muted: #5f5f5f;
+  --color-line: #e2dfd9;
+  --color-ok: #1d6b3a;
+  --color-warn: #8a4b00;
+  --radius-sm: 3px;
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --color-surface: #1b1b1b;
+    --color-canvas: #111111;
+    --color-ink: #f1f1f1;
+    --color-muted: #a6a6a6;
+    --color-line: #333333;
+    --color-ok: #62c58a;
+    --color-warn: #f0a85a;
+    --color-cardinal: #c42020;
+    --color-cardinal-dark: #a51515;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+html, body {
+  background: var(--color-canvas);
+  color: var(--color-ink);
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-gold);
+  outline-offset: 2px;
 }

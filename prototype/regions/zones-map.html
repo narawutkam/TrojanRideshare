@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LA Drop-off Zones</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    :root { --bg: #fff; --fg: #1a1a1a; --muted: #666; --panel: #f6f6f4; --border: #ddd; --accent: #990000; }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg: #161616; --fg: #eee; --muted: #aaa; --panel: #222; --border: #333; --accent: #ffcc00; }
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; height: 100%; background: var(--bg); color: var(--fg); font: 14px/1.4 system-ui, -apple-system, sans-serif; }
+    .app { display: flex; height: 100%; }
+    #map { flex: 1; }
+    aside { width: 320px; overflow-y: auto; padding: 16px; background: var(--panel); border-left: 1px solid var(--border); }
+    h1 { font-size: 18px; margin: 0 0 4px; }
+    h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin: 14px 0 4px; }
+    .hint { color: var(--muted); margin: 0 0 12px; }
+    #result { padding: 10px; border: 1px solid var(--border); border-radius: 8px; min-height: 44px; background: var(--bg); }
+    #result b { color: var(--accent); }
+    ul { list-style: none; padding: 0; margin: 0; }
+    li { display: flex; gap: 8px; align-items: center; padding: 4px; border-radius: 6px; cursor: pointer; }
+    li:hover { background: var(--bg); }
+    .sw { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+    .zone-label { background: none; border: none; box-shadow: none; font-weight: 600; font-size: 10px; color: #222; text-shadow: 0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff; white-space: nowrap; }
+    .zone-label::before { display: none; }
+    @media (max-width: 700px) { .app { flex-direction: column; } aside { width: 100%; height: 40%; border-left: none; border-top: 1px solid var(--border); } }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div id="map"></div>
+    <aside>
+      <h1>LA drop-off zones</h1>
+      <p class="hint">Each circle is the walking range around one drop-off point. Click anywhere to see where a rider going there would be dropped off.</p>
+      <div id="result">No point selected.</div>
+      <div id="list"></div>
+    </aside>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="zones.js"></script>
+  <script>
+    const { WALK_RADIUS_KM, AREAS, ZONES, PICKUPS, assignZone, distanceKm, walkMinutes } = window.LARegions;
+    const map = L.map("map").setView([34.04, -118.33], 11);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 18, attribution: "&copy; OpenStreetMap contributors",
+    }).addTo(map);
+
+    const areaColors = { downtown: "#e6194b", central: "#f58231", hollywood: "#911eb4", weho: "#f032e6", "mid-city": "#4363d8",
+      westside: "#3cb44b", beaches: "#42d4f4", "south-bay": "#469990", south: "#9a6324", north: "#808000" };
+
+    const circles = {};
+    ZONES.forEach((z) => {
+      const color = areaColors[z.area];
+      const c = L.circle([z.dropoff.lat, z.dropoff.lng], { radius: WALK_RADIUS_KM * 1000, color, weight: 1.5, fillOpacity: 0.18 })
+        .bindPopup(`<b>${z.name}</b><br>${z.landmarks.map((l) => `${l.name} · ${walkMinutes(distanceKm(z.dropoff, l))} min walk`).join("<br>")}`)
+        .addTo(map);
+      L.circleMarker([z.dropoff.lat, z.dropoff.lng], { radius: 3, color, fillOpacity: 1 }).addTo(map);
+      L.tooltip({ permanent: true, direction: "top", offset: [0, -4], className: "zone-label" })
+        .setLatLng([z.dropoff.lat, z.dropoff.lng]).setContent(z.name).addTo(map);
+      circles[z.id] = c;
+    });
+
+    const list = document.getElementById("list");
+    AREAS.forEach((a) => {
+      const h = document.createElement("h2");
+      h.textContent = a.name;
+      list.appendChild(h);
+      const ul = document.createElement("ul");
+      ZONES.filter((z) => z.area === a.id).forEach((z) => {
+        const li = document.createElement("li");
+        li.innerHTML = `<span class="sw" style="background:${areaColors[a.id]}"></span>${z.name}`;
+        li.onclick = () => { map.setView([z.dropoff.lat, z.dropoff.lng], 15); circles[z.id].openPopup(); };
+        ul.appendChild(li);
+      });
+      list.appendChild(ul);
+    });
+
+    PICKUPS.forEach((p) => L.circleMarker([p.lat, p.lng], { radius: 6, color: "#990000", fillColor: "#ffcc00", fillOpacity: 1, weight: 2 })
+      .bindTooltip(`Pickup: ${p.name}`).addTo(map));
+
+    let marker;
+    map.on("click", (e) => {
+      const { lat, lng } = e.latlng;
+      if (marker) marker.remove();
+      marker = L.marker([lat, lng]).addTo(map);
+      const m = assignZone(lat, lng);
+      document.getElementById("result").innerHTML = m.zone
+        ? `<b>${m.zone.name}</b><br>~${m.walkMinutes} min walk from drop-off (${(m.walkKm * 1000).toFixed(0)} m straight line)`
+        : `Outside every zone.<br>Closest drop-off: ${m.nearest.name}, ${m.nearestKm.toFixed(1)} km away (~${walkMinutes(m.nearestKm)} min walk)`;
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Your Party · Trojan Rideshare</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="css/app.css" />
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <a class="logo" href="index.html"><span class="logo-mark">T</span>Trojan Rideshare</a>
+      <nav>
+        <a href="index.html#trips">Find a trip</a>
+        <a href="my-trips.html" class="active">My trips</a>
+      </nav>
+      <div id="auth"></div>
+    </div>
+  </header>
+
+  <!-- Shown when the viewer can't see this party -->
+  <main class="wrap gate" id="gate" hidden>
+    <h2 id="gate-title" style="margin:0 0 8px"></h2>
+    <p class="muted" id="gate-text" style="margin:0 0 18px"></p>
+    <a class="btn btn-primary" href="index.html" style="text-decoration:none;display:inline-block">Find a trip</a>
+  </main>
+
+  <div id="party" hidden>
+    <section class="party-hero">
+      <div class="wrap">
+        <a class="back" href="my-trips.html">← My trips</a>
+        <h1 id="p-title"></h1>
+        <div class="meta" id="p-meta"></div>
+      </div>
+    </section>
+
+    <main class="wrap" style="padding-bottom:40px">
+      <div class="posted-banner" id="posted-banner" role="status" hidden>
+        <div class="posted-icon">🔔</div>
+        <div style="flex:1">
+          <h2 id="posted-title"></h2>
+          <p id="posted-text"></p>
+        </div>
+        <button class="btn btn-ghost" id="posted-close" aria-label="Dismiss">Got it</button>
+      </div>
+      <div class="party-layout">
+        <section class="card chat">
+          <div class="card-head"><h2>Party chat</h2><span class="muted" style="font-size:13px" id="chat-count"></span></div>
+          <div class="msgs" id="msgs" aria-live="polite"></div>
+          <form class="composer" id="composer" autocomplete="off">
+            <input id="msg-input" placeholder="Message your party…" maxlength="500" />
+            <button class="btn btn-primary" type="submit">Send</button>
+          </form>
+        </section>
+
+        <aside class="stack">
+          <section class="card">
+            <div class="card-head"><h2>Party</h2><span class="muted" style="font-size:13px" id="seat-count"></span></div>
+            <div class="card-body"><ul class="members" id="members"></ul></div>
+          </section>
+
+          <section class="card">
+            <div class="card-head"><h2>Trip details</h2><button class="btn btn-ghost" id="edit-btn" hidden style="padding:5px 12px;font-size:13px">Edit</button></div>
+            <div class="card-body"><dl class="kv" id="details"></dl></div>
+            <div id="party-map"></div>
+          </section>
+
+          <section class="card">
+            <div class="card-head"><h2>Day of the trip</h2></div>
+            <div class="card-body">
+              <ol class="checklist" id="dayof"></ol>
+            </div>
+          </section>
+
+          <div id="leave-area" class="stack" style="gap:8px">
+            <button class="btn btn-ghost danger" id="leave-btn">Leave this trip</button>
+            <p class="muted" id="leave-note" style="margin:0;font-size:13px"></p>
+          </div>
+        </aside>
+      </div>
+    </main>
+  </div>
+
+  <!-- Edit trip (booker only) -->
+  <div class="backdrop" id="edit-modal">
+    <div class="modal" role="dialog" aria-labelledby="edit-title">
+      <h3 id="edit-title">Edit trip details</h3>
+      <p class="sub">Your party gets a message in the chat about any change.</p>
+      <div class="field"><label for="e-time">Departure</label><input id="e-time" type="datetime-local" /></div>
+      <div class="field"><label for="e-pickup">Pickup location</label><select id="e-pickup"></select></div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" data-close>Cancel</button>
+        <button class="btn btn-primary" id="edit-go">Save changes</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="regions/regions.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    const A = window.App;
+    const $ = (s) => document.querySelector(s);
+    const params = new URLSearchParams(location.search);
+
+    function renderAuth() {
+      const el = $("#auth");
+      if (!A.user) { el.innerHTML = `<a class="btn btn-gold" href="index.html" style="text-decoration:none">Sign in with USC</a>`; return; }
+      el.innerHTML = `<div class="user"><div><div>${A.escapeHtml(A.user.name)}</div><div class="strikes">${A.strikes}/3 strikes</div></div>
+        <div class="avatar">${A.initials(A.user.name)}</div></div>`;
+    }
+
+    function currentTrip() {
+      // ?trip=ID if given, otherwise the user's own current trip
+      return params.get("trip") ? A.getTrip(params.get("trip")) : A.myTrip();
+    }
+
+    function gate(title, text) {
+      $("#party").hidden = true; $("#gate").hidden = false;
+      $("#gate-title").textContent = title; $("#gate-text").textContent = text;
+    }
+
+    let map, mapLayer;
+    function renderMap(t) {
+      if (!map) {
+        map = L.map("party-map", { scrollWheelZoom: false, zoomControl: false });
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 18, attribution: "&copy; OpenStreetMap" }).addTo(map);
+        mapLayer = L.layerGroup().addTo(map);
+      }
+      mapLayer.clearLayers();
+      const r = A.regionById[t.regionId], drop = A.dropoffOf(t.regionId), pick = A.pickupById[t.pickup];
+      const poly = L.polygon(r.polygon.map(([lng, lat]) => [lat, lng]), { color: "#990000", weight: 1.5, fillOpacity: 0.12 }).addTo(mapLayer);
+      L.circleMarker([pick.lat, pick.lng], { radius: 7, color: "#990000", fillColor: "#ffcc00", fillOpacity: 1, weight: 2 }).bindTooltip(`Pickup: ${pick.name}`).addTo(mapLayer);
+      L.polyline([[pick.lat, pick.lng], [drop.lat, drop.lng]], { color: "#990000", weight: 2, opacity: .5, dashArray: "6 6" }).addTo(mapLayer);
+      L.circleMarker([drop.lat, drop.lng], { radius: 7, color: "#fff", weight: 2, fillColor: "#1b1b1b", fillOpacity: 1 }).bindTooltip("Uber drop-off (region center)").addTo(mapLayer);
+      t.riders.forEach((m) => L.circleMarker([m.dest.lat, m.dest.lng], { radius: 5, color: "#fff", weight: 1.5, fillColor: A.isMe(m.who) ? "#ffcc00" : "#990000", fillOpacity: 1 })
+        .bindTooltip(`${A.escapeHtml(m.who.name.split(" ")[0])}: ${A.escapeHtml(m.dest.name.split(",")[0])}`).addTo(mapLayer));
+      map.fitBounds(poly.getBounds().extend([pick.lat, pick.lng]), { padding: [20, 20] });
+    }
+
+    let lastMsgCount = -1;
+    function renderChat(t) {
+      const msgs = A.chatOf(t.id);
+      const box = $("#msgs");
+      const atBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 60;
+      box.innerHTML = msgs.length ? msgs.map((m) => {
+        if (!m.from) return `<div class="msg sys">${A.escapeHtml(m.text)}</div>`;
+        const me = A.isMe(m.from);
+        return `<div class="msg ${me ? "me" : ""}">${me ? "" : `<div class="who">${A.escapeHtml(m.from.name)}</div>`}
+          <div class="bubble">${A.escapeHtml(m.text)}</div><div class="time">${A.fmtTime(m.at)}</div></div>`;
+      }).join("") : `<div class="msg sys">No messages yet. Say hi to your party!</div>`;
+      $("#chat-count").textContent = `${t.riders.length} member${t.riders.length === 1 ? "" : "s"}`;
+      if (atBottom || msgs.length !== lastMsgCount) box.scrollTop = box.scrollHeight;
+      lastMsgCount = msgs.length;
+    }
+
+    function render() {
+      renderAuth();
+      if (!A.user) return gate("Sign in to see your party", "Party pages are only visible to signed-in USC students who are in the trip.");
+      const t = currentTrip();
+      if (!t) return gate("You're not in a trip yet", "Find a trip to a region you're headed to, or create one. Once you join, your party and chat will show up here.");
+      const mine = A.myRider(t);
+      if (!mine) return gate("You're not in this party", "Only members of a trip can see its party page and chat.");
+      $("#gate").hidden = true; $("#party").hidden = false;
+
+      const r = A.regionById[t.regionId], pick = A.pickupById[t.pickup], drop = A.dropoffOf(t.regionId);
+      const n = A.taken(t), iAmBooker = A.isMe(A.booker(t));
+      document.title = `${r.name} · Your Party · Trojan Rideshare`;
+      $("#p-title").textContent = `Trip to ${r.name}`;
+      $("#p-meta").innerHTML = `<span>🕒 ${A.fmtDay(t.departAt)}, ${A.fmtTime(t.departAt)}</span><span>📍 Pickup: ${pick.name}</span>
+        <span>👥 ${n}/${A.MAX_SIZE} riders</span>${iAmBooker ? `<span>⭐ You're the Uber booker</span>` : ""}`;
+
+      // Members
+      $("#seat-count").textContent = `${n} of ${A.MAX_SIZE} seats`;
+      $("#members").innerHTML = t.riders.map((m, i) => {
+        const me = A.isMe(m.who);
+        return `<li><div class="avatar">${A.initials(m.who.name)}</div><div>
+          <div class="nm">${A.escapeHtml(m.who.name)} ${i === 0 ? `<span class="badge">Booker</span>` : ""} ${me ? `<span class="badge you">You</span>` : ""}</div>
+          <div class="sub">→ ${A.escapeHtml(m.dest.name.split(",")[0])} · ${A.fmtWalk(A.distanceKm(drop, m.dest))} from drop-off</div>
+          <div class="sub">${m.size > 1 ? `Party of ${m.size} · ` : ""}<span class="stars">★ ${m.who.rating.toFixed(1)}</span> · ${m.who.rides} rides${m.returnOptIn ? " · ↩ return trip" : ""}</div>
+        </div></li>`;
+      }).join("") + (t.riders.length === 1 && iAmBooker
+        ? `<li class="sub" style="justify-content:center;text-align:center">🔔 Waiting for riders. You'll get notified when someone joins.</li>`
+        : n < A.MAX_SIZE ? `<li class="sub" style="justify-content:center">${A.MAX_SIZE - n} open seat${A.MAX_SIZE - n === 1 ? "" : "s"}. Others can still join.</li>` : "");
+
+      // Details
+      const perNow = Math.ceil(t.estTotal / n), myShare = perNow * mine.size;
+      $("#details").innerHTML = `
+        <dt>Departure</dt><dd>${A.fmtDay(t.departAt)}, ${A.fmtTime(t.departAt)}</dd>
+        <dt>Pickup</dt><dd>${pick.name}</dd>
+        <dt>Drop-off</dt><dd>${A.escapeHtml(r.name)} region center</dd>
+        <dt>Your walk</dt><dd>${A.fmtWalk(A.distanceKm(drop, mine.dest))} to ${A.escapeHtml(mine.dest.name.split(",")[0])}</dd>
+        <dt>Return trip</dt><dd>${t.returnAt ? `${A.fmtTime(t.returnAt)}${mine.returnOptIn ? " · you're signed up" : " · not signed up"}` : "None"}</dd>
+        <dt>Est. fare</dt><dd>~$${t.estTotal} total · your share ~$${myShare}${mine.size > 1 ? ` (party of ${mine.size})` : ""}</dd>
+        <dt>Booker</dt><dd>${A.escapeHtml(A.booker(t).name)}${iAmBooker ? " (you)" : ""}</dd>`;
+      $("#edit-btn").hidden = !iAmBooker;
+
+      // Day-of checklist (honor system)
+      $("#dayof").innerHTML = `
+        <li>Be at <b>${pick.name}</b> by <b>${A.fmtTime(new Date(t.departAt - 5 * 60000))}</b>.</li>
+        <li>${iAmBooker ? "<b>You</b> request" : `<b>${A.escapeHtml(A.booker(t).name)}</b> requests`} the Uber to the ${A.escapeHtml(r.name)} drop-off and adds everyone to the fare split.</li>
+        <li>Walk from the drop-off to your own destination.</li>
+        <li class="muted">No-shows get a strike. Three strikes and you're suspended for a while.</li>`;
+
+      // Leave rules: free > 2h out, fee 1-2h, not allowed < 1h; hidden once departed
+      const info = A.leaveInfo(t);
+      $("#leave-area").hidden = t.departAt <= new Date();
+      $("#leave-btn").disabled = !info.allowed;
+      $("#leave-btn").textContent = info.allowed ? (info.late ? "Leave this trip (fee applies)" : "Leave this trip") : "Can't leave within 1 hour of departure";
+      $("#leave-note").textContent = info.reason;
+
+      renderChat(t);
+      renderMap(t);
+    }
+
+    // ---------- Chat ----------
+    const DEMO_REPLIES = ["Sounds good! 👍", "See you there!", "Works for me", "I might be 2 min late but I'll be there", "Perfect, thanks!"];
+    $("#composer").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const input = $("#msg-input"), text = input.value.trim(), t = currentTrip();
+      if (!text || !t) return;
+      try { A.sendMessage(t.id, text); } catch (err) { A.toast(err.message); return; }
+      input.value = ""; renderChat(t);
+      // Demo only: another member replies once so the chat feels alive. Real chat would use websockets.
+      const others = t.riders.filter((m) => !A.isMe(m.who));
+      if (others.length && !t.demoReplied) {
+        t.demoReplied = true; A.save();
+        setTimeout(() => {
+          const who = others[Math.floor(Math.random() * others.length)].who;
+          A.chatOf(t.id).push({ from: { name: who.name, email: who.email }, text: DEMO_REPLIES[Math.floor(Math.random() * DEMO_REPLIES.length)], at: new Date() });
+          A.save(); renderChat(t);
+        }, 1800);
+      }
+    });
+
+    // ---------- Modals ----------
+    const openModal = (id) => $("#" + id).classList.add("open");
+    const closeModals = () => document.querySelectorAll(".backdrop").forEach((b) => b.classList.remove("open"));
+    document.querySelectorAll(".backdrop").forEach((b) => b.addEventListener("click", (e) => { if (e.target === b || e.target.closest("[data-close]")) closeModals(); }));
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeModals(); });
+
+    $("#e-pickup").innerHTML = A.PICKUPS.map((p) => `<option value="${p.id}">${p.name}</option>`).join("");
+    $("#edit-btn").onclick = () => {
+      const t = currentTrip();
+      $("#e-time").value = A.toLocalInput(t.departAt); $("#e-pickup").value = t.pickup;
+      openModal("edit-modal");
+    };
+    $("#edit-go").onclick = () => {
+      const t = currentTrip();
+      try {
+        const changed = A.updateTrip(t.id, { departAt: new Date($("#e-time").value), pickup: $("#e-pickup").value });
+        closeModals(); render(); A.toast(changed ? "Trip updated. Your party was notified in the chat." : "No changes.");
+      } catch (err) { A.toast(err.message); }
+    };
+
+    $("#leave-btn").onclick = () => A.confirmLeave(currentTrip(), () => { location.href = "my-trips.html?left=1"; });
+
+    A.onExternalChange(render); // keep chat in sync across tabs
+    render();
+
+    // Just created a trip: confirm it's posted and that the booker will be notified as riders join.
+    if (params.has("created") && !$("#party").hidden) {
+      const t = currentTrip(), left = A.MAX_SIZE - A.taken(t);
+      $("#posted-title").textContent = `Your trip to ${A.regionById[t.regionId].name} is posted!`;
+      $("#posted-text").innerHTML = `You'll get notified when more riders join. ${left > 0 ? `There ${left === 1 ? "is" : "are"} <b>${left} open seat${left === 1 ? "" : "s"}</b>, and` : "It's full, and"} it's now listed for other Trojans heading to ${A.escapeHtml(A.regionById[t.regionId].name)}. You can chat with everyone here once they join.`;
+      $("#posted-banner").hidden = false;
+      $("#posted-close").onclick = () => { $("#posted-banner").hidden = true; };
+      params.delete("created");
+      history.replaceState(null, "", `${location.pathname}?${params}`); // don't show it again on refresh
+    }
+    setInterval(render, 60000); // keep the leave cutoff current
+  </script>
+</body>
+</html>

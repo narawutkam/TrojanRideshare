@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>My Trips · Trojan Rideshare</title>
+  <link rel="stylesheet" href="css/app.css" />
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <a class="logo" href="index.html"><span class="logo-mark">T</span>Trojan Rideshare</a>
+      <nav>
+        <a href="index.html#trips">Find a trip</a>
+        <a href="my-trips.html" class="active">My trips</a>
+      </nav>
+      <div id="auth"></div>
+    </div>
+  </header>
+
+  <section class="party-hero">
+    <div class="wrap">
+      <h1>My trips</h1>
+      <div class="meta"><span>You can be registered for one trip at a time.</span></div>
+    </div>
+  </section>
+
+  <main class="wrap" style="padding:24px 20px 48px;max-width:860px">
+    <div id="gate" class="gate" hidden>
+      <h2 style="margin:0 0 8px">Sign in to see your trips</h2>
+      <p class="muted" style="margin:0 0 18px">Your trips are only visible to you after signing in with your USC account.</p>
+      <a class="btn btn-gold" href="index.html" style="text-decoration:none;display:inline-block">Sign in with USC</a>
+    </div>
+
+    <div id="content" hidden>
+      <div class="section-head"><h2>Current trip</h2></div>
+      <div id="current"></div>
+
+      <div class="section-head" style="margin-top:32px"><h2>Past trips</h2><span class="muted" id="past-count"></span></div>
+      <div id="past" class="stack" style="gap:10px"></div>
+    </div>
+  </main>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="regions/regions.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    const A = window.App;
+    const $ = (s) => document.querySelector(s);
+    const esc = A.escapeHtml;
+
+    function countdown(d) {
+      const ms = d - new Date();
+      if (ms <= 0) return "Departed";
+      const h = Math.floor(ms / 36e5), m = Math.round((ms % 36e5) / 6e4);
+      return `Departs in ${h ? `${h}h ` : ""}${m}m`;
+    }
+
+    function renderCurrent(t) {
+      if (!t) {
+        $("#current").innerHTML = `<div class="empty"><p style="margin:0 0 12px">You're not in a trip right now.</p>
+          <a class="btn btn-primary" href="index.html#trips" style="text-decoration:none;display:inline-block">Find a trip</a></div>`;
+        return;
+      }
+      const r = A.regionById[t.regionId], pick = A.pickupById[t.pickup], me = A.myRider(t), drop = A.dropoffOf(t.regionId);
+      const n = A.taken(t), iAmBooker = A.isMe(A.booker(t)), info = A.leaveInfo(t);
+      const chat = A.chatOf(t.id), last = [...chat].reverse().find((m) => m.from);
+      $("#current").innerHTML = `<article class="card">
+        <div class="card-body" style="display:grid;gap:10px">
+          <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:flex-start">
+            <div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px">
+                <span class="badge ${iAmBooker ? "" : "you"}">${iAmBooker ? "You're the booker" : "Rider"}</span>
+                ${t.returnAt ? `<span class="tag tag-return">↩ Return ${A.fmtTime(t.returnAt)}${me.returnOptIn ? " · signed up" : ""}</span>` : ""}
+              </div>
+              <h3 style="margin:0;font-size:20px">${esc(r.name)}</h3>
+            </div>
+            <span class="tag" style="font-size:13px">${countdown(t.departAt)}</span>
+          </div>
+          <dl class="kv">
+            <dt>Departure</dt><dd>${A.fmtDay(t.departAt)}, ${A.fmtTime(t.departAt)}</dd>
+            <dt>Pickup</dt><dd>${pick.name}</dd>
+            <dt>Your stop</dt><dd>${esc(me.dest.name.split(",")[0])} · ${A.fmtWalk(A.distanceKm(drop, me.dest))} from drop-off</dd>
+            <dt>Party</dt><dd>${n}/${A.MAX_SIZE} riders · booked by ${esc(A.booker(t).name)}${iAmBooker ? " (you)" : ""}</dd>
+            <dt>Your share</dt><dd>~$${Math.ceil(t.estTotal / n) * me.size}${me.size > 1 ? ` (party of ${me.size})` : ""}</dd>
+          </dl>
+          ${last ? `<div style="font-size:14px;padding:10px 12px;border-radius:10px;background:var(--bg);border:1px solid var(--border)">
+            <span class="muted">Latest in chat · ${esc(last.from.name.split(" ")[0])}:</span> ${esc(last.text.length > 120 ? last.text.slice(0, 117) + "…" : last.text)}</div>` : ""}
+          <div class="status show ${info.allowed ? (info.late ? "bad" : "") : "bad"}" style="margin:0;${info.allowed && !info.late ? "background:var(--bg);color:var(--muted);border:1px solid var(--border)" : ""}">${esc(info.reason)}</div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <a class="btn btn-primary" href="party.html?trip=${t.id}" style="text-decoration:none">Open party & chat</a>
+            <button class="btn btn-ghost danger" id="leave" ${info.allowed ? "" : "disabled"}>${info.allowed ? (info.late ? "Leave (fee applies)" : "Leave trip") : "Can't leave now"}</button>
+          </div>
+        </div>
+      </article>`;
+      $("#leave").onclick = () => A.confirmLeave(t, () => { A.toast("You left the trip. You can join or create another one now."); render(); });
+    }
+
+    function renderPast(list) {
+      $("#past-count").textContent = list.length ? `${list.length} trip${list.length === 1 ? "" : "s"}` : "";
+      $("#past").innerHTML = list.length ? list.map((t) => {
+        const me = A.myRider(t);
+        return `<div class="card"><div class="card-body" style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+          <div><b>${esc(A.regionById[t.regionId].name)}</b>
+            <div class="muted" style="font-size:13px">${A.fmtDay(t.departAt)}, ${A.fmtTime(t.departAt)} · from ${A.pickupById[t.pickup].name} · to ${esc(me.dest.name.split(",")[0])}${A.isMe(A.booker(t)) ? " · you booked" : ""}</div></div>
+          <a class="btn btn-ghost" href="party.html?trip=${t.id}" style="text-decoration:none">View chat</a>
+        </div></div>`;
+      }).join("") : `<p class="muted" style="margin:0">No past trips yet. Your completed rides will show up here.</p>`;
+    }
+
+    function render() {
+      const signedIn = A.renderHeaderUser($("#auth"), { onSignOut: () => (location.href = "index.html") });
+      if (!signedIn) { $("#auth").innerHTML = ""; $("#gate").hidden = false; $("#content").hidden = true; return; }
+      $("#gate").hidden = true; $("#content").hidden = false;
+      const { current, past } = A.myTrips();
+      renderCurrent(current);
+      renderPast(past);
+    }
+
+    A.onExternalChange(render);
+    render();
+    if (new URLSearchParams(location.search).has("left")) {
+      A.toast("You left the trip. You can join or create another one now.");
+      history.replaceState(null, "", location.pathname);
+    }
+    setInterval(render, 60000); // keep the countdown and leave cutoff current
+  </script>
+</body>
+</html>

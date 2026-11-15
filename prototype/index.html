@@ -1,0 +1,538 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Trojan Rideshare</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="css/app.css" />
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <a class="logo" href="#"><span class="logo-mark">T</span>Trojan Rideshare</a>
+      <nav>
+        <a href="#trips">Find a trip</a>
+        <a href="#" data-action="create">Create a trip</a>
+        <a href="#how">How it works</a>
+        <a href="my-trips.html" id="nav-party" hidden>My trips</a>
+      </nav>
+      <div id="auth"></div>
+    </div>
+  </header>
+  <div class="my-trip-banner" id="my-trip-banner">
+    <div class="wrap"><span id="my-trip-text"></span><a href="my-trips.html">My trips →</a></div>
+  </div>
+
+  <section class="hero">
+    <div class="wrap">
+      <h1>Split an Uber anywhere in LA with other Trojans.</h1>
+      <p>Enter where you're going. If it's inside one of our ride regions, join a trip there or start one. The Uber drops your party at the region's center, and everyone walks to their own spot.</p>
+      <form class="search" id="search" autocomplete="off">
+        <div class="field">
+          <label for="q">Where to?</label>
+          <input id="q" placeholder="Any address or place in LA" />
+        </div>
+        <div class="field">
+          <label for="when">When</label>
+          <select id="when">
+            <option value="any">Any time</option>
+            <option value="today">Today</option>
+            <option value="tonight">Tonight (after 6pm)</option>
+            <option value="weekend">This weekend</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="pickup-filter">Pickup</label>
+          <select id="pickup-filter"><option value="any">Any pickup</option></select>
+        </div>
+        <button class="btn btn-primary" type="submit">Find trips</button>
+        <button class="btn btn-ghost" type="button" data-action="create">+ Create trip</button>
+      </form>
+      <div class="status" id="search-status"></div>
+    </div>
+  </section>
+
+  <main class="wrap">
+    <div class="layout">
+      <section id="trips">
+        <div class="section-head">
+          <h2 id="list-title">Upcoming trips</h2>
+          <span class="muted" id="count"></span>
+        </div>
+        <div class="chip-row" id="region-chips"></div>
+        <div class="trips" id="trip-list"></div>
+      </section>
+      <aside class="map-card">
+        <div id="map"></div>
+        <div class="cap">Shaded areas are ride regions. Click anywhere on the map to set your destination. Yellow pins are USC pickup spots.</div>
+      </aside>
+    </div>
+
+    <section id="how">
+      <div class="section-head" style="margin-top:40px"><h2>How it works</h2></div>
+      <div class="info">
+        <div class="step"><div class="num">1</div><h4>Enter your destination</h4><p>Any address in LA. If it's inside a ride region, you'll see trips headed to that region.</p></div>
+        <div class="step"><div class="num">2</div><h4>Join or create</h4><p>Join solo or as a party, up to 6 per ride. If a trip is full, extra sign-ups start a new listing.</p></div>
+        <div class="step"><div class="num">3</div><h4>Meet at pickup</h4><p>Gather at the Village, EVK, or Webb at departure time. Use party chat if plans change.</p></div>
+        <div class="step"><div class="num">4</div><h4>Ride, split, walk</h4><p>The booker pays and adds everyone to the split. The Uber drops you at the region center and you walk from there.</p></div>
+      </div>
+      <div class="duo">
+        <div class="panel">
+          <h3>The honor system</h3>
+          <p class="muted" style="margin:0">No-shows leave everyone else paying more. Miss a ride you signed up for and you get a strike. Three strikes and you're suspended for a while.</p>
+          <div class="strike-dots" id="strike-dots"><span></span><span></span><span></span></div>
+          <p class="muted" style="margin:0;font-size:13px">Cancelling within 2 hours of departure carries a cancellation fee, which you agree to when you sign up.</p>
+        </div>
+        <div class="panel">
+          <h3>Pickup locations</h3>
+          <ul class="pickups" id="pickup-list"></ul>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">Trojan Rideshare · For USC students only · Not affiliated with Uber · Place search © OpenStreetMap contributors via Photon</div>
+  </footer>
+
+  <!-- Sign-in modal -->
+  <div class="backdrop" id="login-modal">
+    <div class="modal" role="dialog" aria-labelledby="login-title">
+      <h3 id="login-title">Sign in with USC</h3>
+      <p class="sub">Trojan Rideshare is only for current USC students. Use your USC NetID.</p>
+      <p class="notice">Demo: this is a placeholder for USC single sign-on (Shibboleth). No password is collected here.</p>
+      <div class="field"><label for="netid">USC email</label><input id="netid" placeholder="ttrojan@usc.edu" /></div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" data-close>Cancel</button>
+        <button class="btn btn-primary" id="login-go">Continue with USC SSO</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Join modal -->
+  <div class="backdrop" id="join-modal">
+    <div class="modal" role="dialog" aria-labelledby="join-title">
+      <h3 id="join-title">Join trip</h3>
+      <p class="sub" id="join-sub"></p>
+      <div class="field"><label for="j-dest">Your destination</label><input id="j-dest" placeholder="Where in this region are you going?" autocomplete="off" /></div>
+      <div class="status" id="j-status"></div>
+      <div class="seg" id="join-mode">
+        <button type="button" class="active" data-mode="single">Just me</button>
+        <button type="button" data-mode="party">With my party</button>
+      </div>
+      <div class="field" id="party-size-field" hidden>
+        <label for="party-size">Party size (including you)</label>
+        <select id="party-size"></select>
+      </div>
+      <div id="overflow-note" class="notice" hidden></div>
+      <label class="check"><input type="checkbox" id="billing-ok" /> <span><b>Billing agreement.</b> I'll pay my share of the fare to the booker, and I accept a cancellation fee if I cancel within 2 hours of departure or don't show up (which also adds a strike).</span></label>
+      <label class="check" id="return-row"><input type="checkbox" id="return-ok" /> <span id="return-text"></span></label>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" data-close>Cancel</button>
+        <button class="btn btn-primary" id="join-go" disabled>Join trip</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create modal -->
+  <div class="backdrop" id="create-modal">
+    <div class="modal" role="dialog" aria-labelledby="create-title">
+      <h3 id="create-title">Create a trip</h3>
+      <p class="sub">You'll be the Uber booker: you book the ride to the region center and add your party to the fare split.</p>
+      <div class="field"><label for="c-dest">Your destination</label><input id="c-dest" placeholder="Any address or place in LA" autocomplete="off" /></div>
+      <div class="status" id="c-status"></div>
+      <div class="field"><label for="c-pickup">Pickup location</label><select id="c-pickup"></select></div>
+      <div class="field"><label for="c-time">Departure</label><input id="c-time" type="datetime-local" /></div>
+      <div class="field"><label for="c-party">People in your party (including you)</label><select id="c-party"></select></div>
+      <label class="check"><input type="checkbox" id="c-return" /> <span><b>Suggest a return trip</b> for everyone. Optional; riders can opt in when they join.</span></label>
+      <div class="field" id="c-return-field" hidden><label for="c-return-time">Return departure</label><input id="c-return-time" type="datetime-local" /></div>
+      <label class="check"><input type="checkbox" id="c-billing" /> <span>I agree to book and pay for the Uber, then add riders to the split.</span></label>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" data-close>Cancel</button>
+        <button class="btn btn-primary" id="create-go" disabled>Post trip</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="regions/regions.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    const A = window.App;
+    const { REGIONS, PICKUPS, MAX_SIZE, regionById, pickupById, regionFor, dropoffOf, distanceKm,
+      escapeHtml, fmtTime, fmtDay, fmtWalk, initials, toLocalInput, setStatus, toast } = A;
+    const $ = (s) => document.querySelector(s);
+    const goToParty = (trip) => { location.href = `party.html?trip=${trip.id}`; };
+
+    // ---------- Place search (Map API) ----------
+    // Uses Photon (OpenStreetMap geocoder, free, no key) limited to the LA area.
+    // Swap for Google Places / Mapbox in production: geocode() just needs to return [{name, lat, lng}].
+    const LA_BBOX = "-118.95,33.65,-117.65,34.35";
+    async function geocode(q, signal) {
+      const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=7&lang=en&lat=34.05&lon=-118.30&bbox=${LA_BBOX}`;
+      const res = await fetch(url, { signal });
+      if (!res.ok) throw new Error("geocoder " + res.status);
+      const data = await res.json();
+      const seen = new Set();
+      return data.features.map((f) => {
+        const p = f.properties;
+        const street = p.housenumber && p.street ? `${p.housenumber} ${p.street}` : p.street;
+        const name = [...new Set([p.name, street, p.district || p.locality, p.city].filter(Boolean))].join(", ");
+        return { name, lat: f.geometry.coordinates[1], lng: f.geometry.coordinates[0] };
+      }).filter((r) => r.name && !seen.has(r.name) && seen.add(r.name));
+    }
+    const withRegion = (place) => ({ ...place, regionId: regionFor(place.lat, place.lng)?.id || null });
+
+    /** Attach a type-ahead to an input. onChange(place|null) fires on pick, and with null when the user edits the text. */
+    function placeInput(input, onChange) {
+      const box = document.createElement("div");
+      box.className = "ac";
+      input.parentElement.appendChild(box);
+      let timer, ctrl, results = [], active = -1;
+      const hide = () => { box.classList.remove("open"); active = -1; };
+      const pick = (i) => { const p = results[i]; if (!p) return; input.value = p.name; hide(); onChange(p); };
+      const render = (msg) => {
+        if (msg) { box.innerHTML = `<div class="ac-msg">${msg}</div>`; box.classList.add("open"); return; }
+        if (!results.length) { box.innerHTML = `<div class="ac-msg">No places found in the LA area.</div>`; box.classList.add("open"); return; }
+        box.innerHTML = results.map((r, i) => `<div class="ac-item ${i === active ? "active" : ""}" data-i="${i}">
+          <span class="nm">${escapeHtml(r.name)}</span>
+          <span class="rg ${r.regionId ? "" : "out"}">${r.regionId ? escapeHtml(regionById[r.regionId].name) : "Not in a region"}</span></div>`).join("");
+        box.classList.add("open");
+      };
+      async function run(q) {
+        ctrl?.abort(); ctrl = new AbortController();
+        render("Searching…");
+        try { results = (await geocode(q, ctrl.signal)).map(withRegion); active = -1; render(); }
+        catch (e) { if (e.name !== "AbortError") render("Place search is unavailable right now. Try clicking the map instead."); }
+      }
+      input.addEventListener("input", () => {
+        onChange(null);
+        clearTimeout(timer);
+        const q = input.value.trim();
+        if (q.length < 3) { hide(); return; }
+        timer = setTimeout(() => run(q), 280);
+      });
+      input.addEventListener("keydown", (e) => {
+        if (!box.classList.contains("open") || !results.length) return;
+        if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); active = (active + (e.key === "ArrowDown" ? 1 : -1) + results.length) % results.length; render(); }
+        else if (e.key === "Enter" && active >= 0) { e.preventDefault(); pick(active); }
+        else if (e.key === "Escape") { e.stopPropagation(); hide(); }
+      });
+      box.addEventListener("mousedown", (e) => { const it = e.target.closest(".ac-item"); if (it) { e.preventDefault(); pick(+it.dataset.i); } });
+      input.addEventListener("blur", () => setTimeout(hide, 120));
+      return {
+        set(place) { input.value = place ? place.name : ""; hide(); },
+        async resolve() { // first result for whatever is typed (used on submit without picking)
+          const q = input.value.trim(); if (!q) return null;
+          clearTimeout(timer); ctrl?.abort(); hide();
+          const r = (await geocode(q)).map(withRegion); return r[0] || null;
+        },
+      };
+    }
+
+    // ---------- View state ----------
+    const state = { regionId: "all", dest: null, when: "any", pickup: "any" };
+
+    function matchesWhen(d) {
+      const now = new Date();
+      if (state.when === "today") return d.toDateString() === now.toDateString();
+      if (state.when === "tonight") return d.toDateString() === now.toDateString() && d.getHours() >= 18;
+      if (state.when === "weekend") {
+        const day = d.getDay(), diffDays = (d - now) / 864e5;
+        return ((day === 5 && d.getHours() >= 17) || day === 6 || day === 0) && diffDays < 7;
+      }
+      return true;
+    }
+
+    // ---------- Rendering ----------
+    function renderAuth() {
+      const el = $("#auth");
+      if (!A.user) {
+        el.innerHTML = `<button class="btn btn-gold" id="signin">Sign in with USC</button>`;
+        $("#signin").onclick = () => openModal("login-modal");
+      } else {
+        el.innerHTML = `<div class="user"><div><div>${escapeHtml(A.user.name)}</div><div class="strikes">${A.strikes}/3 strikes</div></div>
+          <div class="avatar">${initials(A.user.name)}</div><button class="btn btn-ghost" id="signout" style="color:#fff;border-color:rgba(255,255,255,.4);padding:6px 10px">Sign out</button></div>`;
+        $("#signout").onclick = () => { A.signOut(); renderAll(); toast("Signed out"); };
+      }
+      document.querySelectorAll("#strike-dots span").forEach((s, i) => s.classList.toggle("on", i < A.strikes));
+      const mt = A.myTrip();
+      $("#nav-party").hidden = !A.user;
+      $("#my-trip-banner").classList.toggle("show", !!mt);
+      if (mt) $("#my-trip-text").innerHTML = `You're registered for <b>${escapeHtml(regionById[mt.regionId].name)}</b>, ${fmtDay(mt.departAt)} at ${fmtTime(mt.departAt)} from ${pickupById[mt.pickup].name}. You can be in one trip at a time.`;
+    }
+
+    function renderChips() {
+      const counts = {};
+      A.trips.filter(A.isActive).forEach((t) => { counts[t.regionId] = (counts[t.regionId] || 0) + 1; });
+      const total = Object.values(counts).reduce((a, b) => a + b, 0);
+      const chip = (id, label, n) => `<button class="chip ${state.regionId === id ? "active" : ""}" data-region="${id}">${escapeHtml(label)}${n ? ` · ${n}` : ""}</button>`;
+      $("#region-chips").innerHTML = chip("all", "All regions", total) +
+        REGIONS.filter((r) => counts[r.id] || r.id === state.regionId).map((r) => chip(r.id, r.name, counts[r.id])).join("");
+    }
+
+    function visibleTrips() {
+      const list = A.trips.filter((t) => (state.regionId === "all" || t.regionId === state.regionId)
+        && (state.pickup === "any" || t.pickup === state.pickup) && matchesWhen(t.departAt) && t.departAt > new Date(Date.now() - 36e5));
+      if (state.dest?.regionId) {
+        // backend: rank trips in the searched region by how close riders are going to the searched spot
+        const near = (t) => Math.min(...t.riders.map((r) => distanceKm(state.dest, r.dest)));
+        return list.map((t) => ({ t, d: near(t) })).sort((a, b) => a.d - b.d || a.t.departAt - b.t.departAt).map((x) => x.t);
+      }
+      return list.sort((a, b) => a.departAt - b.departAt);
+    }
+
+    function joinButton(t, full, myT) {
+      if (A.myRider(t)) return `<a class="btn btn-primary" href="party.html?trip=${t.id}" style="text-decoration:none">Open party</a>`;
+      if (myT) return `<button class="btn btn-ghost" disabled title="You can only be in one trip at a time">In another trip</button>`;
+      return `<button class="btn ${full ? "btn-ghost" : "btn-primary"}" data-join="${t.id}">${full ? "Full · start another" : "Join"}</button>`;
+    }
+
+    function renderTrips() {
+      const list = visibleTrips(), myT = A.myTrip();
+      const region = regionById[state.regionId];
+      $("#list-title").textContent = region ? `Trips to ${region.name}` : "Upcoming trips";
+      $("#count").textContent = `${list.length} trip${list.length === 1 ? "" : "s"}`;
+      if (!list.length) {
+        const canCreate = (!state.dest || state.dest.regionId) && !myT;
+        $("#trip-list").innerHTML = `<div class="empty"><p style="margin:0 0 12px">${region ? `No trips to ${escapeHtml(region.name)} yet.` : "No trips match these filters."}</p>
+          ${canCreate ? `<button class="btn btn-primary" data-action="create">Start a trip${region ? ` to ${escapeHtml(region.name)}` : ""}</button>` : ""}</div>`;
+        return;
+      }
+      $("#trip-list").innerHTML = list.map((t) => {
+        const n = A.taken(t), full = n >= MAX_SIZE, b = A.booker(t), mine = A.myRider(t);
+        const perNow = Math.ceil(t.estTotal / n), perFull = Math.ceil(t.estTotal / MAX_SIZE);
+        const seats = Array.from({ length: MAX_SIZE }, (_, i) => `<span class="seat ${i < n ? "taken" : ""}"></span>`).join("");
+        const dests = [...new Set(t.riders.map((r) => r.dest.name.split(",")[0]))];
+        const walk = state.dest?.regionId === t.regionId ? `<span>🚶 ${fmtWalk(distanceKm(dropoffOf(t.regionId), state.dest))} from drop-off to your spot</span>` : "";
+        return `<article class="trip" data-id="${t.id}">
+          <div>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:4px">
+              ${t.returnAt ? `<span class="tag tag-return">↩ Return ${fmtTime(t.returnAt)}</span>` : ""}
+              ${mine ? `<span class="tag tag-in">You're in${mine.size > 1 ? ` (party of ${mine.size})` : ""}</span>` : ""}
+            </div>
+            <h3>${escapeHtml(regionById[t.regionId].name)}</h3>
+            <div class="meta">
+              <span>🕒 ${fmtDay(t.departAt)}, ${fmtTime(t.departAt)}</span>
+              <span>📍 From ${pickupById[t.pickup].name}</span>
+              ${walk}
+            </div>
+            <div class="riders"><span class="muted">Riders headed to:</span> ${dests.map(escapeHtml).join(" · ")}</div>
+            <div class="booker">Booker: <b>${escapeHtml(b.name)}</b> <span class="stars">★ ${b.rating.toFixed(1)}</span> <span class="muted">· ${b.rides} rides</span></div>
+          </div>
+          <div class="trip-side">
+            <div class="price">~$${perNow}<small>per person now · $${perFull} if full</small></div>
+            <div><div class="seats" title="${n} of ${MAX_SIZE} seats taken">${seats}</div><div class="muted" style="font-size:12px;margin-top:2px">${full ? "Full" : `${MAX_SIZE - n} seat${MAX_SIZE - n === 1 ? "" : "s"} left`}</div></div>
+            ${joinButton(t, full, myT)}
+          </div>
+        </article>`;
+      }).join("");
+    }
+
+    function renderAll() { renderAuth(); renderChips(); renderTrips(); renderMap(); }
+
+    // ---------- Map ----------
+    const map = L.map("map", { scrollWheelZoom: false }).setView([34.04, -118.33], 10);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 18, attribution: "&copy; OpenStreetMap contributors" }).addTo(map);
+    const regionLayers = {};
+    REGIONS.forEach((r) => {
+      const layer = L.polygon(r.polygon.map(([lng, lat]) => [lat, lng]), { color: "#990000", weight: 1, fillOpacity: 0.1 }).addTo(map);
+      layer.bindTooltip(r.name, { sticky: true });
+      regionLayers[r.id] = layer;
+    });
+    PICKUPS.forEach((p) => L.circleMarker([p.lat, p.lng], { radius: 6, color: "#990000", fillColor: "#ffcc00", fillOpacity: 1, weight: 2 }).bindTooltip(p.name).addTo(map));
+    const overlay = L.layerGroup().addTo(map);
+    function renderMap() {
+      Object.entries(regionLayers).forEach(([id, l]) => l.setStyle(state.regionId === id
+        ? { color: "#990000", weight: 2.5, fillOpacity: 0.28 } : { color: "#990000", weight: 1, fillOpacity: 0.1 }));
+      overlay.clearLayers();
+      if (regionById[state.regionId]) {
+        const c = dropoffOf(state.regionId);
+        L.circleMarker([c.lat, c.lng], { radius: 7, color: "#fff", weight: 2, fillColor: "#1b1b1b", fillOpacity: 1 })
+          .bindTooltip("Uber drop-off (region center)").addTo(overlay);
+        if (state.dest?.regionId === state.regionId) L.polyline([[c.lat, c.lng], [state.dest.lat, state.dest.lng]], { color: "#1b1b1b", weight: 2, dashArray: "4 6" }).addTo(overlay);
+      }
+      if (state.dest) L.marker([state.dest.lat, state.dest.lng]).bindTooltip(escapeHtml(state.dest.name)).addTo(overlay);
+    }
+    // Click the map to drop a destination anywhere.
+    map.on("click", (e) => {
+      const place = withRegion({ name: `Pinned spot (${e.latlng.lat.toFixed(4)}, ${e.latlng.lng.toFixed(4)})`, lat: e.latlng.lat, lng: e.latlng.lng });
+      heroSearch.set(place);
+      applyDestination(place, { scroll: false });
+    });
+
+    function setRegion(id, { fit = true } = {}) {
+      state.regionId = id;
+      if (fit && id !== "all" && regionLayers[id]) map.fitBounds(regionLayers[id].getBounds(), { maxZoom: 14, padding: [24, 24] });
+      renderAll();
+    }
+
+    // ---------- Search ----------
+    const pickupOptions = PICKUPS.map((p) => `<option value="${p.id}">${p.name}</option>`).join("");
+    $("#pickup-filter").innerHTML += pickupOptions;
+    $("#c-pickup").innerHTML = pickupOptions;
+    $("#pickup-list").innerHTML = PICKUPS.map((p) => `<li><span class="pin"></span>${p.name}</li>`).join("");
+
+    function applyDestination(place, { scroll = true } = {}) {
+      state.dest = place;
+      const st = $("#search-status");
+      if (!place) { setStatus(st); setRegion("all", { fit: false }); return; }
+      if (place.regionId) {
+        const r = regionById[place.regionId];
+        const km = distanceKm(dropoffOf(r.id), place);
+        setStatus(st, "ok", `✓ <b>${escapeHtml(place.name)}</b> is in the <b>${escapeHtml(r.name)}</b> region. The Uber drops off at the region center, ${fmtWalk(km)} from your spot.`);
+        setRegion(r.id);
+      } else {
+        setStatus(st, "bad", `✕ <b>${escapeHtml(place.name)}</b> isn't inside any ride region, so you can't book a trip there. Pick a spot inside one of the shaded regions on the map.`);
+        state.regionId = "all";
+        map.setView([place.lat, place.lng], 12);
+        renderAll();
+      }
+      if (scroll) document.getElementById("trips").scrollIntoView({ behavior: "smooth" });
+    }
+
+    const heroSearch = placeInput($("#q"), (place) => { if (place) applyDestination(place); });
+    $("#search").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      state.when = $("#when").value; state.pickup = $("#pickup-filter").value;
+      if (!$("#q").value.trim()) { applyDestination(null); return; }
+      if (state.dest && state.dest.name === $("#q").value) { applyDestination(state.dest); return; }
+      try {
+        const place = await heroSearch.resolve();
+        if (!place) { setStatus($("#search-status"), "bad", `We couldn't find “${escapeHtml($("#q").value)}” in LA. Try a fuller address or click the map.`); return; }
+        heroSearch.set(place); applyDestination(place);
+      } catch { setStatus($("#search-status"), "bad", "Place search is unavailable right now. Click the map to set your destination instead."); }
+    });
+    ["#when", "#pickup-filter"].forEach((s) => $(s).addEventListener("change", () => { state.when = $("#when").value; state.pickup = $("#pickup-filter").value; renderAll(); }));
+    $("#region-chips").addEventListener("click", (e) => { const b = e.target.closest("[data-region]"); if (b) setRegion(b.dataset.region); });
+
+    // ---------- Modals ----------
+    let pendingAfterLogin = null;
+    function openModal(id) { $("#" + id).classList.add("open"); }
+    function closeModals() { document.querySelectorAll(".backdrop").forEach((b) => b.classList.remove("open")); }
+    document.querySelectorAll(".backdrop").forEach((b) => b.addEventListener("click", (e) => { if (e.target === b || e.target.closest("[data-close]")) closeModals(); }));
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeModals(); });
+    const requireLogin = (fn) => { if (A.user) fn(); else { pendingAfterLogin = fn; openModal("login-modal"); } };
+    /** One trip at a time: returns true (and explains) if the user is already in a trip. */
+    function blockedByOneTrip() {
+      const mt = A.myTrip();
+      if (!mt) return false;
+      toast(`You're already in the ${regionById[mt.regionId].name} trip. Leave it from My trips to join or create another.`);
+      return true;
+    }
+
+    $("#login-go").onclick = () => {
+      const email = $("#netid").value.trim() || "ttrojan@usc.edu";
+      if (!/@usc\.edu$/i.test(email)) { toast("Use your @usc.edu email"); return; }
+      A.signIn(email);
+      closeModals(); renderAll(); toast(`Signed in as ${email}`);
+      if (pendingAfterLogin) { const fn = pendingAfterLogin; pendingAfterLogin = null; fn(); }
+    };
+
+    // ----- Join -----
+    let joinTrip = null, joinMode = "single", joinDest = null;
+    const joinInput = placeInput($("#j-dest"), (p) => { joinDest = p; updateJoin(); });
+    function openJoin(trip) {
+      if (A.myRider(trip)) { goToParty(trip); return; }
+      if (blockedByOneTrip()) return;
+      joinTrip = trip; joinMode = "single";
+      const r = regionById[trip.regionId];
+      $("#join-title").textContent = `Join: ${r.name}`;
+      $("#join-sub").textContent = `${fmtDay(trip.departAt)} at ${fmtTime(trip.departAt)} from ${pickupById[trip.pickup].name}. Booked by ${A.booker(trip).name}.`;
+      joinDest = state.dest?.regionId === trip.regionId ? state.dest : null;
+      joinInput.set(joinDest);
+      $("#party-size").innerHTML = Array.from({ length: MAX_SIZE - 1 }, (_, i) => `<option value="${i + 2}">${i + 2} people</option>`).join("");
+      $("#billing-ok").checked = false; $("#return-ok").checked = false;
+      $("#return-row").hidden = !trip.returnAt;
+      if (trip.returnAt) $("#return-text").innerHTML = `<b>Also sign me up for the return trip</b> at ${fmtTime(trip.returnAt)} (optional).`;
+      document.querySelectorAll("#join-mode button").forEach((b) => b.classList.toggle("active", b.dataset.mode === "single"));
+      updateJoin(); openModal("join-modal");
+    }
+    const joinSize = () => (joinMode === "single" ? 1 : +$("#party-size").value);
+    function updateJoin() {
+      const r = regionById[joinTrip.regionId];
+      let destOk = false;
+      if (!joinDest) setStatus($("#j-status"), $("#j-dest").value.trim() ? "bad" : "", $("#j-dest").value.trim() ? "Pick a place from the suggestions." : "");
+      else if (joinDest.regionId !== r.id) {
+        setStatus($("#j-status"), "bad", joinDest.regionId
+          ? `✕ That's in ${escapeHtml(regionById[joinDest.regionId].name)}, not ${escapeHtml(r.name)}. Find a trip to that region instead.`
+          : `✕ That spot isn't inside any ride region, so you can't book it.`);
+      } else { destOk = true; setStatus($("#j-status"), "ok", `✓ In ${escapeHtml(r.name)} · ${fmtWalk(distanceKm(dropoffOf(r.id), joinDest))} from the drop-off`); }
+
+      $("#party-size-field").hidden = joinMode === "single";
+      const left = MAX_SIZE - A.taken(joinTrip), n = joinSize(), note = $("#overflow-note");
+      if (n > left) {
+        note.hidden = false;
+        note.innerHTML = left > 0
+          ? `Only ${left} seat${left === 1 ? "" : "s"} left. Your party of ${n} will get a <b>new listing</b> to ${escapeHtml(r.name)} at the same time and pickup, with you as the booker.`
+          : `This trip is full. We'll create a <b>new listing</b> to ${escapeHtml(r.name)} at the same time and pickup, with you as the booker.`;
+        $("#join-go").textContent = "Create new listing";
+      } else { note.hidden = true; $("#join-go").textContent = n > 1 ? `Join with ${n} people` : "Join trip"; }
+      $("#join-go").disabled = !(destOk && $("#billing-ok").checked);
+    }
+    $("#join-mode").addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; joinMode = b.dataset.mode;
+      document.querySelectorAll("#join-mode button").forEach((x) => x.classList.toggle("active", x === b)); updateJoin(); });
+    $("#party-size").addEventListener("change", updateJoin);
+    $("#billing-ok").addEventListener("change", updateJoin);
+    $("#join-go").onclick = () => {
+      try {
+        const { trip } = A.joinTrip(joinTrip.id, joinDest, joinSize(), $("#return-ok").checked);
+        closeModals(); goToParty(trip);
+      } catch (err) { toast(err.message); }
+    };
+
+    // ----- Create -----
+    let createDest = null;
+    const createInput = placeInput($("#c-dest"), (p) => { createDest = p; updateCreate(); });
+    function openCreate() {
+      if (blockedByOneTrip()) return;
+      const start = new Date(Date.now() + 2 * 36e5); start.setMinutes(0, 0, 0);
+      createDest = state.dest; createInput.set(createDest);
+      $("#c-time").value = toLocalInput(start);
+      $("#c-return-time").value = toLocalInput(new Date(start.getTime() + 3 * 36e5));
+      $("#c-party").innerHTML = Array.from({ length: MAX_SIZE }, (_, i) => `<option value="${i + 1}">${i + 1}</option>`).join("");
+      $("#c-return").checked = false; $("#c-billing").checked = false;
+      updateCreate(); openModal("create-modal");
+    }
+    function updateCreate() {
+      const st = $("#c-status");
+      let ok = false;
+      if (!createDest) setStatus(st, $("#c-dest").value.trim() ? "bad" : "", $("#c-dest").value.trim() ? "Pick a place from the suggestions." : "");
+      else if (!createDest.regionId) setStatus(st, "bad", "✕ That spot isn't inside any ride region, so you can't create a trip there.");
+      else { ok = true; const r = regionById[createDest.regionId];
+        setStatus(st, "ok", `✓ Trip to <b>${escapeHtml(r.name)}</b>. Drop-off at the region center, ${fmtWalk(distanceKm(dropoffOf(r.id), createDest))} from your spot.`); }
+      $("#c-return-field").hidden = !$("#c-return").checked;
+      $("#create-go").disabled = !(ok && $("#c-billing").checked && $("#c-time").value);
+    }
+    ["#c-return", "#c-billing", "#c-time"].forEach((s) => $(s).addEventListener("input", updateCreate));
+    $("#create-go").onclick = () => {
+      try {
+        const trip = A.createTrip({ dest: createDest, pickup: $("#c-pickup").value, departAt: new Date($("#c-time").value),
+          size: +$("#c-party").value, returnAt: $("#c-return").checked ? new Date($("#c-return-time").value) : null });
+        closeModals(); location.href = `party.html?trip=${trip.id}&created=1`;
+      } catch (err) { toast(err.message); }
+    };
+
+    document.addEventListener("click", (e) => {
+      const j = e.target.closest("[data-join]");
+      if (j) { const trip = A.getTrip(j.dataset.join); requireLogin(() => openJoin(trip)); return; }
+      const c = e.target.closest("[data-action='create']");
+      if (c) {
+        e.preventDefault();
+        if (state.dest && !state.dest.regionId) { toast("Your destination isn't in a ride region, so you can't create a trip there."); return; }
+        requireLogin(openCreate);
+      }
+    });
+
+    A.onExternalChange(renderAll);
+    renderAll();
+    if (new URLSearchParams(location.search).has("left")) {
+      toast("You left the trip. You can join or create another one now.");
+      history.replaceState(null, "", location.pathname);
+    }
+  </script>
+</body>
+</html>
