@@ -46,6 +46,8 @@ export const joinTripSchema = z.object({
 
 export const fitQuerySchema = z.object({ destinationLocationId: idSchema });
 
+export const mapQuerySchema = z.object({ destinationLocationId: idSchema.optional() });
+
 export const leaveTripSchema = z.object({}).strict();
 
 export const sendMessageSchema = z

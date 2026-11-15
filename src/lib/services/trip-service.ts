@@ -8,7 +8,7 @@ import { AppError } from "@/lib/services/errors";
 import { LocationService } from "@/lib/services/location-service";
 import {
   PAGE_SIZE,
-  type CreateTripInput, type ListTripsQuery, type Location, type ParticipantSummary, type RoutePricing, type RouteStop, type Trip, type TripFit,
+  type CreateTripInput, type ListTripsQuery, type Location, type MapStop, type ParticipantSummary, type RoutePricing, type RouteStop, type Trip, type TripFit, type TripMap,
   type TripParticipant, type TripRoute, type TripStatus, type TripView,
 } from "@/types";
 
@@ -406,6 +406,40 @@ export class TripService {
       return { tripId: rec.id, stop: destination, fits: false, reason: "MAX_STOPS", message: "This trip is full.", route: null };
     }
     return (await this.evaluateFit(rec, actorId, destination)).fit;
+  }
+
+  /**
+   * What to draw on the route map: the pickup and every stop in driving order with coordinates, plus the road path
+   * through them when the provider can draw one. For someone who has not joined, `destinationLocationId` shows the
+   * route as it would be with their stop in it. A failed path lookup is not an error: the map just joins the stops.
+   */
+  async mapFor(actorId: string, tripId: string, destinationLocationId?: string): Promise<TripMap> {
+    const rec = this.requireVisible(tripId, actorId);
+    const pickup = this.locations.requireLocation(rec.pickupLocationId, "pickup");
+    const isMember = this.membership(rec.id, actorId)?.status === "confirmed";
+
+    let route: TripRoute | null = null;
+    if (destinationLocationId && !isMember) {
+      const destination = this.resolveDestination(rec, destinationLocationId);
+      route = (await this.evaluateFit(rec, actorId, destination)).fit.route;
+    }
+    route ??= this.routeOf(rec, actorId, false);
+    if (!route) throw new AppError("VALIDATION_ERROR", "There is no route to show for this trip.");
+
+    const stops: MapStop[] = [
+      { order: 0, kind: "pickup", name: pickup.name, latitude: pickup.latitude, longitude: pickup.longitude, yours: false },
+      ...route.stops.map((s): MapStop => ({
+        order: s.order, kind: s.isFinal ? "final" : "stop", name: s.location.name, latitude: s.location.latitude, longitude: s.location.longitude,
+        yours: route!.your?.order === s.order,
+      })),
+    ];
+    let encodedPolyline: string | null = null;
+    try {
+      encodedPolyline = (await this.ctx.travel.path?.(stops.map((p) => ({ latitude: p.latitude, longitude: p.longitude })), new Date(rec.departureTime))) ?? null;
+    } catch {
+      encodedPolyline = null;
+    }
+    return { stops, encodedPolyline };
   }
 
   /**

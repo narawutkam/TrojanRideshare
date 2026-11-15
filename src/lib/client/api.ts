@@ -1,7 +1,7 @@
 "use client";
 
 import type {
-  AgreementTerms, ApiResponse, AttendanceReport, ChatMessage, CreateTripInput, ErrorCode, HealthInfo, ListTripsQuery, Location, Region, TripFit, TripView, User,
+  AgreementTerms, ApiResponse, AttendanceReport, ChatMessage, CreateTripInput, ErrorCode, HealthInfo, ListTripsQuery, Location, Region, TripFit, TripMap, TripView, User,
 } from "@/types";
 
 /** Typed browser client for the routes in README §5. Screens never call fetch directly. */
@@ -57,6 +57,7 @@ export const api = {
   cancelTrip: (id: string) => send<TripView>("PATCH", `/api/trips/${id}`, { status: "cancelled" }),
   joinTrip: (id: string, agreementVersion: string, destinationLocationId?: string) =>
     send<TripView>("POST", `/api/trips/${id}/join`, { agreementAccepted: true, agreementVersion, destinationLocationId }),
+  tripMap: (id: string, destinationLocationId?: string) => get<TripMap>(`/api/trips/${id}/map${qs({ destinationLocationId })}`),
   tripFit: (id: string, destinationLocationId: string) => get<TripFit>(`/api/trips/${id}/fit${qs({ destinationLocationId })}`),
   leaveTrip: (id: string) => send<TripView>("POST", `/api/trips/${id}/leave`, {}),
 

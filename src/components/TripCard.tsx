@@ -35,7 +35,7 @@ export function TripCard({ view, actorId, extra, actions }: {
           <TripStatusLabel status={trip.status} />
         </div>
       </div>
-      <p className="mt-3 text-[17px] font-semibold leading-snug">{pickup.name} → {last.name}</p>
+      <p className="mt-3 text-[19px] font-bold leading-tight">{pickup.name} → {last.name}</p>
       {via.length > 0 && <p className="text-sm text-muted">via {via.join(", ")}</p>}
       <p className="mt-1 text-sm text-muted">
         {stops.length > 1 ? `${stops.length} stops` : "Direct"}
@@ -44,7 +44,7 @@ export function TripCard({ view, actorId, extra, actions }: {
         {trip.returnTripId ? " · return offered" : ""}
       </p>
       {yours && (
-        <p className="mt-3 border-l-4 border-ok bg-[#eef6f0] px-3 py-2 text-[15px] text-ink">
+        <p className="mt-3 rounded-xl bg-[#e6f3ea] px-4 py-3 text-[14px] leading-snug text-[#0a5a2b]">
           <b className="font-semibold">You get out at {fit?.stop?.name ?? "your stop"}.</b> About {Math.round(yours.rideMinutes)} min ride, {detourLabel(yours.detourMinutes)}
         </p>
       )}
@@ -66,12 +66,12 @@ export function TripCard({ view, actorId, extra, actions }: {
   if (!actions) {
     return (
       <article>
-        <Link href={tripHref} className="block rounded-sm border border-line bg-surface p-4 active:bg-field">{body}</Link>
+        <Link href={tripHref} className="block rounded-xl border border-line bg-surface p-4 active:bg-field">{body}</Link>
       </article>
     );
   }
   return (
-    <article className="rounded-sm border border-line bg-surface p-4">
+    <article className="rounded-xl border border-line bg-surface p-4">
       {body}
       <div className="mt-4 grid gap-2">{actions}</div>
     </article>

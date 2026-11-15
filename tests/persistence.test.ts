@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createFixtures } from "@/lib/mock/fixtures";
-import { createUpstashKv, DEMO_KEY, kvFromEnv, loadDemoDb, saveDemoDb, type KvClient } from "@/lib/mock/persistence";
+import { carryOverPlaces, createUpstashKv, DEMO_KEY, kvFromEnv, loadDemoDb, saveDemoDb, type KvClient } from "@/lib/mock/persistence";
 import { TRIP, USER } from "@/lib/mock/fixtures";
 
 const NOW = new Date("2026-11-13T18:00:00Z");
@@ -191,5 +191,27 @@ describe("withDemoStore across servers", () => {
     vi.stubEnv("UPSTASH_REDIS_REST_TOKEN", "");
     const a = await import("@/lib/services");
     expect(await a.withDemoStore(async () => 42)).toBe(42);
+  });
+});
+
+describe("reseeding keeps searched places", () => {
+  const googlePlace = { id: "11111111-1111-4111-8111-111111111111", name: "Quarters Korean BBQ", address: "LA", latitude: 34.06, longitude: -118.3, regionId: null, googlePlaceId: "ChIJ-test" };
+
+  it("carries Google places into a stale reseed, so an open page's place id still works", async () => {
+    const kv = memoryKv();
+    const first = await loadDemoDb(kv, { ttlMs: 6 * HOUR, now: () => NOW, seed: () => createFixtures(NOW, 4) });
+    first.db.locations.push(googlePlace);
+    await saveDemoDb(kv, first.db, first.seededAt, "", 3600);
+    const later = await loadDemoDb(kv, { ttlMs: 6 * HOUR, now: () => new Date(NOW.getTime() + 7 * HOUR), seed: () => createFixtures(new Date(NOW.getTime() + 7 * HOUR), 4) });
+    expect(later.created).toBe(true);
+    expect(later.db.locations.find((l) => l.id === googlePlace.id)?.name).toBe("Quarters Korean BBQ");
+    expect(later.db.locations.filter((l) => l.id === googlePlace.id)).toHaveLength(1);
+  });
+
+  it("does not carry over the built-in catalog twice, or anything that is not from Google", () => {
+    const next = createFixtures(NOW, 4);
+    const before = next.locations.length;
+    carryOverPlaces(next, [...next.locations, { ...googlePlace, googlePlaceId: null, id: "22222222-2222-4222-8222-222222222222" }]);
+    expect(next.locations).toHaveLength(before);
   });
 });

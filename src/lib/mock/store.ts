@@ -1,5 +1,6 @@
 import { getConfig } from "@/config/env";
 import { createFixtures, type MockDb } from "@/lib/mock/fixtures";
+import { carryOverPlaces } from "@/lib/mock/persistence";
 
 /**
  * Shared in-memory fixture store for mock mode (README §7). One instance per
@@ -35,7 +36,7 @@ export function installMockDb(db: MockDb, seededAt: string): void {
 
 /** Demo reset action (README §7): restore the known starting dataset. */
 export function resetMockDb(): MockDb {
-  const fresh = createFixtures(new Date(), getConfig().tripCapacity);
+  const fresh = carryOverPlaces(createFixtures(new Date(), getConfig().tripCapacity), g.__hacksc_mock_db?.locations);
   installMockDb(fresh, new Date().toISOString());
   return getMockDb();
 }

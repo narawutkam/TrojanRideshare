@@ -56,7 +56,7 @@ export function PartyChat({ tripId, actorId, roster, bookerId, onRosterStale }: 
   if (closed) return <Notice tone="warn">Chat is closed for this trip.</Notice>;
 
   return (
-    <section aria-label="Party chat" className="flex h-[min(34rem,65dvh)] min-h-80 flex-col rounded-sm border border-line bg-surface">
+    <section aria-label="Party chat" className="flex h-[min(34rem,65dvh)] min-h-80 flex-col rounded-xl border border-line bg-surface">
       <div className="flex items-center justify-between border-b border-line px-4 py-3">
         <h2 className="font-bold">Party chat</h2>
         <span className="text-xs text-muted">{roster.length} member{roster.length === 1 ? "" : "s"}</span>
@@ -70,7 +70,7 @@ export function PartyChat({ tripId, actorId, roster, bookerId, onRosterStale }: 
           return (
             <div key={m.id} className={`max-w-[80%] ${mine ? "self-end text-right" : "self-start"}`}>
               {!mine && <p className="mb-0.5 text-xs font-semibold text-muted">{name}{m.senderId === bookerId ? " · Booker" : ""}</p>}
-              <p className={`whitespace-pre-wrap break-words rounded-sm px-3.5 py-2 text-left text-[15px] ${mine ? "bg-cardinal text-white" : "bg-field"}`}>{m.content}</p>
+              <p className={`whitespace-pre-wrap break-words rounded-2xl px-3.5 py-2 text-left text-[15px] ${mine ? "bg-cardinal text-white" : "bg-field"}`}>{m.content}</p>
               <p className="mt-0.5 text-[11px] text-muted">{formatTime(m.createdAt)}</p>
             </div>
           );

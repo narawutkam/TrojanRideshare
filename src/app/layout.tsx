@@ -2,23 +2,22 @@ import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 
-// Source Sans 3 is the open version of the typeface USC's own sign-in uses. The font file is kept in the project
-// (src/app/fonts, SIL Open Font License) instead of being downloaded from Google during the build, because that
-// download failed intermittently on Vercel and failed the whole deployment.
-const sourceSans = localFont({
-  src: "./fonts/SourceSans3-Variable.woff2",
-  weight: "200 900", // one variable file covers every weight the app uses
+// Inter, the typeface of the SC ride design. The font file is kept in the project (src/app/fonts, SIL Open Font
+// License) instead of being downloaded from Google during the build, which failed intermittently on Vercel.
+const inter = localFont({
+  src: "./fonts/Inter-Variable.woff2",
+  weight: "100 900", // one variable file covers every weight the app uses
   style: "normal",
   display: "swap",
-  variable: "--font-source",
+  variable: "--font-inter",
 });
 
 export const metadata: Metadata = {
-  title: "Trojan Rideshare",
+  title: "SC ride",
   description: "Split an Uber anywhere in LA with other USC students.",
-  applicationName: "Trojan Rideshare",
+  applicationName: "SC ride",
   // Opens full-screen like an app when added to the iPhone home screen.
-  appleWebApp: { capable: true, title: "Rideshare", statusBarStyle: "default" },
+  appleWebApp: { capable: true, title: "SC ride", statusBarStyle: "default" },
   formatDetection: { telephone: false },
 };
 
@@ -31,7 +30,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={sourceSans.variable}>
+    <html lang="en" className={inter.variable}>
       <body className="min-h-dvh antialiased">{children}</body>
     </html>
   );

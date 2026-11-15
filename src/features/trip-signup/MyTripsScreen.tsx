@@ -39,7 +39,7 @@ export function MyTripsScreen() {
   };
 
   return (
-    <AppShell title="My trips" subtitle="You can be in one upcoming trip at a time. A trip and its return count as one.">
+    <AppShell eyebrow="Your rides" title="My trips" subtitle="You can be in one upcoming trip at a time. A trip and its return count as one.">
       {list.loading && !list.data ? <Loading /> : list.error ? <ErrorState error={list.error} onRetry={list.reload} /> : (
         <div className="grid gap-8">
           <section className="grid gap-3">

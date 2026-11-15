@@ -56,6 +56,7 @@ Copy `.env.example` to `.env.local` (git-ignored). All settings are validated in
 | `KV_REST_API_URL`, `KV_REST_API_TOKEN` | empty | Redis for shared demo data on serverless hosting (Vercel's Redis integration sets these). Blank means process memory. `UPSTASH_REDIS_REST_*` also works. |
 | `DEMO_DATA_TTL_HOURS` | 6 | Hours before shared demo data is reseeded. |
 | `GOOGLE_MAPS_API_KEY` | empty | Optional. Turns on Google Places search and Google Routes drive times. Server-only; never prefix with `NEXT_PUBLIC_`. |
+| `NEXT_PUBLIC_GOOGLE_MAPS_BROWSER_KEY` | empty | Optional. Draws the trip route on a Google map. Must be a second, browser-restricted key (HTTP referrers = your site, Maps JavaScript API only) because visitors can see it. Empty shows a simple route diagram. The server key stays server-only. |
 
 Without a Google key, place search uses a seeded catalog of about 35 LA places and drive times use a distance and time-of-day model, so everything still works.
 

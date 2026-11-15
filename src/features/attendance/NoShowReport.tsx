@@ -26,7 +26,7 @@ export function NoShowReport({ tripId, roster, actorId }: { tripId: string; rost
   }
 
   return (
-    <section className="grid gap-3 rounded-sm border border-line bg-surface p-4" aria-label="Attendance">
+    <section className="grid gap-3 rounded-xl border border-line bg-surface p-4" aria-label="Attendance">
       <h2 className="font-bold">Attendance</h2>
       <Notice>Report a rider who didn&apos;t show up. Reports stay <b>pending</b>; strikes aren&apos;t issued until the honor-system policy is approved.</Notice>
       <ul className="grid gap-2">

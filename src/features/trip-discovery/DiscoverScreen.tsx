@@ -75,19 +75,19 @@ export function DiscoverScreen() {
       const moreMin = Math.round(v.fit.route.your.rideMinutes - baseline.fit!.route!.your!.rideMinutes);
       if (saves >= 0.005) {
         return (
-          <p className="mt-3 border-l-4 border-gold bg-[#fff8d6] px-3 py-2 text-[15px] text-ink">
+          <p className="mt-3 rounded-xl bg-gold-soft px-4 py-3 text-[14px] leading-snug text-ink">
             <b className="font-semibold">Cheaper.</b> {money(saves)} less than the fastest option{moreMin > 0 ? `, for about ${moreMin} more min` : ""}
           </p>
         );
       }
     }
-    return cheapest === v ? <p className="mt-3 border-l-4 border-gold bg-[#fff8d6] px-3 py-2 text-[15px] font-semibold text-ink">Lowest price of these options</p> : null;
+    return cheapest === v ? <p className="mt-3 rounded-xl bg-gold-soft px-4 py-3 text-[14px] font-semibold leading-snug text-ink">Lowest price of these options</p> : null;
   };
 
   const createHref = destination?.regionId ? `/create?destination=${destination.id}&name=${encodeURIComponent(destination.name)}` : "/create";
 
   return (
-    <AppShell title="Where to?" subtitle="Pick a destination and we'll show the trips that can drop you there without a long detour.">
+    <AppShell eyebrow="Find a trip" title="Where to?" subtitle="Pick a destination and we'll show the trips that can drop you there without a long detour.">
       <section aria-label="Search" className="grid gap-4">
         <Field label="Destination" htmlFor="dest">
           <LocationSearch id="dest" value={destination} onChange={setDestination} regionNames={regions} placeholder="Search a place in LA" />

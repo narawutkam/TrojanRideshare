@@ -29,7 +29,7 @@ export function RouteTimeline({ pickupName, departureTime, route, youId }: {
     <ol aria-label="Route">
       {rows.map((r, i) => (
         <li key={r.key} className={`relative flex gap-4 ${i < rows.length - 1 ? "pb-6" : ""}`}>
-          {i < rows.length - 1 && <span aria-hidden className="absolute left-[8px] top-5 h-full w-0.5 bg-[#cfcfcf]" />}
+          {i < rows.length - 1 && <span aria-hidden className="absolute left-[8px] top-5 h-full w-0.5 bg-field-border" />}
           <span aria-hidden className="relative z-10 mt-1 grid h-[18px] w-[18px] shrink-0 place-items-center">
             {r.kind === "pickup" && <span className="h-3.5 w-3.5 rounded-full border-[3px] border-ink bg-white" />}
             {r.kind === "stop" && <span className={`h-3.5 w-3.5 rounded-full bg-ink ${r.yours ? "ring-[3px] ring-gold" : ""}`} />}
@@ -49,7 +49,7 @@ export function RouteTimeline({ pickupName, departureTime, route, youId }: {
               </p>
             )}
             {r.yours && route.your && (
-              <p className="mt-1 inline-block rounded-[2px] bg-gold px-2 py-px text-[13px] font-semibold text-ink">
+              <p className="mt-1.5 inline-block rounded-md bg-gold px-2.5 py-1 text-[12px] font-semibold text-ink">
                 Your stop · {mins(route.your.rideMinutes)} ride, {detourLabel(route.your.detourMinutes)}
               </p>
             )}

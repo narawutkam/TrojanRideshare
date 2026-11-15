@@ -17,6 +17,11 @@ export interface TravelTimeProvider {
   matrix(points: GeoPoint[], departAt: Date): Promise<number[][]>;
   /** Road miles between the same points, `miles(points)[i][j]` from points[i] to points[j]. Used for pricing. */
   miles(points: GeoPoint[], departAt: Date): Promise<number[][]>;
+  /**
+   * The road path through the points in order, as a Google encoded polyline, for drawing the route on a map.
+   * Null when the provider cannot draw one (the estimate model); the map then joins the stops with straight lines.
+   */
+  path?(points: GeoPoint[], departAt: Date): Promise<string | null>;
 }
 
 // ---------------------------------------------------------------------------
@@ -104,6 +109,14 @@ export function createFallbackTravelTimeProvider(primary: TravelTimeProvider, fa
   return {
     matrix: (points, departAt) => guard((p) => p.matrix(points, departAt)),
     miles: (points, departAt) => guard((p) => p.miles(points, departAt)),
+    async path(points, departAt) {
+      try {
+        return (await primary.path?.(points, departAt)) ?? null;
+      } catch (e) {
+        if (e instanceof AppError && e.code === "PROVIDER_UNAVAILABLE") return (await fallback.path?.(points, departAt)) ?? null;
+        throw e;
+      }
+    },
   };
 }
 
@@ -120,7 +133,21 @@ export function createCachingTravelTimeProvider(inner: TravelTimeProvider, ttlMs
     if (cache.size > 500) cache.delete(cache.keys().next().value as string);
     return value.map((r) => r.slice());
   };
-  return { matrix: cached("m", (p, a) => inner.matrix(p, a)), miles: cached("mi", (p, a) => inner.miles(p, a)) };
+  const pathCache = new Map<string, { at: number; value: string | null }>();
+  return {
+    matrix: cached("m", (p, a) => inner.matrix(p, a)),
+    miles: cached("mi", (p, a) => inner.miles(p, a)),
+    async path(points, departAt) {
+      const bucket = Math.floor(departAt.getTime() / (15 * 60_000));
+      const key = `p|${bucket}|${points.map((p) => `${p.latitude.toFixed(5)},${p.longitude.toFixed(5)}`).join(";")}`;
+      const hit = pathCache.get(key);
+      if (hit && now() - hit.at < ttlMs) return hit.value;
+      const value = (await inner.path?.(points, departAt)) ?? null;
+      pathCache.set(key, { at: now(), value });
+      if (pathCache.size > 200) pathCache.delete(pathCache.keys().next().value as string);
+      return value;
+    },
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -205,9 +232,42 @@ export function createGoogleTravelTimeProvider(apiKey: string, opts: GoogleRoute
     if (m.some((row) => row.some((v) => Number.isNaN(v)))) throw unavailable("Some destinations could not be routed.");
     return m;
   };
+  const latLng = (p: GeoPoint) => ({ location: { latLng: { latitude: p.latitude, longitude: p.longitude } } });
+
+  /** Routes API computeRoutes: one drive through every stop, in order. Only the encoded path is requested. */
+  async function drivePath(points: GeoPoint[], departAt: Date): Promise<string | null> {
+    if (points.length < 2) return null;
+    const earliest = now().getTime() + 60_000;
+    const departure = new Date(Math.max(departAt.getTime(), earliest)).toISOString();
+    let res: Response;
+    try {
+      res = await doFetch("https://routes.googleapis.com/directions/v2:computeRoutes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Goog-Api-Key": apiKey, "X-Goog-FieldMask": "routes.polyline.encodedPolyline" },
+        body: JSON.stringify({
+          origin: latLng(points[0]),
+          destination: latLng(points[points.length - 1]),
+          ...(points.length > 2 ? { intermediates: points.slice(1, -1).map(latLng) } : {}),
+          travelMode: "DRIVE",
+          routingPreference: "TRAFFIC_AWARE",
+          departureTime: departure,
+          polylineQuality: "OVERVIEW",
+          polylineEncoding: "ENCODED_POLYLINE",
+        }),
+        cache: "no-store",
+      });
+    } catch {
+      throw unavailable("The route path is unavailable.");
+    }
+    if (!res.ok) throw unavailable("The route path is unavailable.");
+    const body = (await res.json()) as { routes?: { polyline?: { encodedPolyline?: string } }[] };
+    return body.routes?.[0]?.polyline?.encodedPolyline ?? null;
+  }
+
   return {
     async matrix(points, departAt) { return complete((await both(points, departAt)).minutes); },
     async miles(points, departAt) { return complete((await both(points, departAt)).miles); },
+    path: drivePath,
   };
 }
 

@@ -1,4 +1,5 @@
 import type { MockDb } from "@/lib/mock/fixtures";
+import type { Location } from "@/types";
 
 /**
  * Shared demo data for serverless hosting (docs/deploy-vercel.md).
@@ -61,6 +62,16 @@ export function kvFromEnv(env: Record<string, string | undefined> = process.env)
   return url && token ? createUpstashKv(url, token) : null;
 }
 
+/**
+ * Keep the places found by a Google search when demo data is reseeded. Pages that are open at the time still hold
+ * those places' ids, and a reseed that forgot them would turn the rider's next tap into "unknown destination".
+ */
+export function carryOverPlaces(into: MockDb, previous: Location[] | undefined): MockDb {
+  const have = new Set(into.locations.map((l) => l.id));
+  for (const l of previous ?? []) if (l.googlePlaceId && !have.has(l.id)) into.locations.push(l);
+  return into;
+}
+
 export interface Loaded {
   db: MockDb;
   seededAt: string;
@@ -76,17 +87,19 @@ export interface Loaded {
  */
 export async function loadDemoDb(kv: KvClient, opts: { ttlMs: number; now: () => Date; seed: () => MockDb }): Promise<Loaded> {
   const raw = await kv.get(DEMO_KEY);
+  let stale: MockDb | undefined;
   if (raw) {
     try {
       const snap = JSON.parse(raw) as { seededAt?: string; db?: MockDb };
       if (snap.db && snap.seededAt && opts.now().getTime() - Date.parse(snap.seededAt) < opts.ttlMs) {
         return { db: snap.db, seededAt: snap.seededAt, created: false, json: JSON.stringify(snap.db) };
       }
+      stale = snap.db;
     } catch {
       /* unreadable snapshot: fall through and reseed */
     }
   }
-  return { db: opts.seed(), seededAt: opts.now().toISOString(), created: true, json: "" };
+  return { db: carryOverPlaces(opts.seed(), stale?.locations), seededAt: opts.now().toISOString(), created: true, json: "" };
 }
 
 /** Write the snapshot only if it changed since `lastJson`. Returns the JSON now stored. */

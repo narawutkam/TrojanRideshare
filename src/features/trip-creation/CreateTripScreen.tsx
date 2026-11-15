@@ -71,7 +71,7 @@ export function CreateTripScreen() {
   if (pickups.error) return <AppShell title="Create a trip"><ErrorState error={pickups.error} onRetry={pickups.reload} /></AppShell>;
 
   return (
-    <AppShell title="Create a trip" subtitle="You're the Booker. Riders heading the same way can add stops along your route.">
+    <AppShell eyebrow="Create a trip" title="You're the Booker." subtitle="Riders heading the same way can add stops along your route.">
       <form onSubmit={submit} className="grid gap-5" noValidate>
         <Field label="Pickup" htmlFor="pickup">
           <select id="pickup" className={inputClass} value={effectivePickup} onChange={(e) => setPickupId(e.target.value)}>
@@ -91,7 +91,7 @@ export function CreateTripScreen() {
           <input id="departure" type="datetime-local" className={inputClass} value={departure} onChange={(e) => setDeparture(e.target.value)} required />
         </Field>
 
-        <div className="grid gap-3 rounded-sm border border-line p-4">
+        <div className="grid gap-3 rounded-xl border border-line p-4">
           <label className="flex items-start gap-3 text-sm">
             <input type="checkbox" className="mt-0.5 h-5 w-5 shrink-0 accent-cardinal" checked={withReturn} onChange={(e) => setWithReturn(e.target.checked)} />
             <span><b>Add an optional return trip.</b> It&apos;s listed as its own trip back to your pickup. Riders sign up for it separately.</span>
@@ -103,7 +103,7 @@ export function CreateTripScreen() {
           )}
         </div>
 
-        <div className="rounded-sm bg-field p-4 text-sm leading-relaxed">
+        <div className="rounded-xl bg-gold p-4 text-[13px] leading-relaxed text-ink">
           <b>You&apos;re the Booker for this trip.</b> You book and pay for the Uber on departure day and add the riders, who split the fare with you.
           Other riders can add their own stops along the way, and nobody&apos;s ride will run more than {terms.data?.maxDetourMinutes ?? 10} minutes longer than going straight to their stop.
           A cancellation fee may apply if you cancel close to departure. (Demo: no money is collected.)

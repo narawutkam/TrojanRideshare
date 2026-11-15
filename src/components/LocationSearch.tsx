@@ -68,7 +68,7 @@ export function LocationSearch({ id, value, onChange, regionNames, placeholder =
         }}
       />
       {open && text.trim().length >= 2 && text !== value?.name && (
-        <ul id={listId} role="listbox" className="absolute left-0 right-0 top-full z-20 mt-1 max-h-72 overflow-auto rounded-sm border border-line bg-surface shadow-lg">
+        <ul id={listId} role="listbox" className="absolute left-0 right-0 top-full z-20 mt-1 max-h-72 overflow-auto rounded-xl border border-line bg-surface shadow-[0_6px_24px_rgba(0,0,0,0.14)]">
           {status === "loading" && <li className="px-4 py-3 text-sm text-muted">Searching…</li>}
           {status === "error" && <li className="px-4 py-3 text-sm text-cardinal">{errorMsg} Keep typing to retry.</li>}
           {status === "idle" && !results.length && <li className="px-4 py-3 text-sm text-muted">No matching places.</li>}

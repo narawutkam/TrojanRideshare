@@ -17,6 +17,7 @@ If no Redis is configured, the app still deploys and runs, but data can disappea
 3. **Add Redis before the first deploy.** In the project, open **Storage**, choose **Create Database**, pick **Upstash Redis** from the Marketplace, and connect it to the project. This adds `KV_REST_API_URL` and `KV_REST_API_TOKEN` to the project's environment variables automatically. Choose a region close to your Vercel functions (for LA users, a US West region).
 4. **Add environment variables** (Project, Settings, Environment Variables). All are optional:
    - `GOOGLE_MAPS_API_KEY`: turns on Google place search and traffic-aware drive times. Create it as a Production and Preview variable, never with a `NEXT_PUBLIC_` prefix, and keep the Google-side restrictions and daily quotas described in `HANDOFF.md`. Without it the app uses its built-in catalog and estimates.
+   - `NEXT_PUBLIC_GOOGLE_MAPS_BROWSER_KEY` (optional): shows the route on a real Google map. Create a second key in Google Cloud, enable only the Maps JavaScript API, restrict it to HTTP referrers for your site, and add it here. It is visible to visitors by design, so never reuse the server key. Without it the trip page shows a simple route diagram.
    - `UBER_PRICE_PER_MILE`, `UBER_STOP_FEE`, `ROUTE_MAX_DETOUR_MINUTES`, `TRIP_CAPACITY`: only to change the defaults (see `.env.example`).
    - `DEMO_DATA_TTL_HOURS`: how long shared data lives before it is reseeded. Default 6.
 5. **Deploy.** Open the deployment URL on a phone. Sign in as Tommy Trojan or Hannah Kim.

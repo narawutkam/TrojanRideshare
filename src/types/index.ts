@@ -119,6 +119,24 @@ export interface TripFit {
   route: TripRoute | null;
 }
 
+/** One point on the route map. Order 0 is the pickup. */
+export interface MapStop {
+  order: number;
+  kind: "pickup" | "stop" | "final";
+  name: string;
+  latitude: number;
+  longitude: number;
+  /** The viewer's own stop. */
+  yours: boolean;
+}
+
+/** What to draw for a trip's route: the stops in order, and the road path through them when it is known. */
+export interface TripMap {
+  stops: MapStop[];
+  /** Google encoded polyline of the drive through the stops, or null (the map then joins the stops with straight lines). */
+  encodedPolyline: string | null;
+}
+
 export interface TripView {
   trip: Trip;
   pickup: Location;
