@@ -113,6 +113,8 @@ export interface TripFit {
   fits: boolean;
   reason: "MAX_STOPS" | "DETOUR_LIMIT" | null;
   message: string | null;
+  /** The stop this was checked for: the place the viewer searched for or picked. */
+  stop: Location | null;
   /** The route including the viewer's stop. Present when it fits. */
   route: TripRoute | null;
 }

@@ -24,6 +24,9 @@ export function TripDetailScreen({ tripId }: { tripId: string }) {
   const terms = useLoad(() => api.terms(), []);
   const returnLeg = useLoad(async () => (view.data?.trip.returnTripId ? api.getTrip(view.data.trip.returnTripId).catch(() => null) : null), [view.data?.trip.returnTripId]);
   const [showPosted, setShowPosted] = useState(params.has("created"));
+  // Arriving from a destination search: the place the rider searched for is the stop to join with.
+  const stopId = params.get("stop");
+  const presetStop = useLoad(async () => (stopId ? api.getLocation(stopId).catch(() => null) : null), [stopId]);
 
   if (view.loading && !view.data) return <AppShell back={{ href: "/trips", label: "Back to Find" }}><Loading /></AppShell>;
   if (view.error || !view.data) {
@@ -67,6 +70,14 @@ export function TripDetailScreen({ tripId }: { tripId: string }) {
           <MembershipLabel status={viewerMembership} isBooker={isBooker} />
         </div>
 
+        {isMember && route?.your && trip.status !== "cancelled" && (
+          <Notice tone="ok">
+            <b className="font-semibold">You get out at {route.stops[route.your.order - 1]?.location.name ?? "your stop"}</b> at{" "}
+            {formatTime(new Date(Date.parse(trip.departureTime) + route.your.rideMinutes * 60000).toISOString())}
+            {route.stops.length > 1 ? `, stop ${route.your.order} of ${route.stops.length}` : ""}. The trip&apos;s final stop is {route.stops[route.stops.length - 1].location.name}.
+          </Notice>
+        )}
+
         <Card className="p-5">
           <div className="mb-5 flex items-baseline justify-between gap-3">
             <h2 className="text-xl font-bold">Route</h2>
@@ -104,7 +115,11 @@ export function TripDetailScreen({ tripId }: { tripId: string }) {
 
         {trip.status === "cancelled" && <Notice tone="warn">This trip was cancelled. Chat is closed and it no longer appears in search.</Notice>}
 
-        {!isMember && trip.status !== "cancelled" && <JoinPanel view={v} terms={terms.data} onJoined={setView} departed={departed} />}
+        {!isMember && trip.status !== "cancelled" && (
+          stopId && presetStop.loading
+            ? <Loading label="Loading your stop…" />
+            : <JoinPanel key={presetStop.data?.id ?? "trip-destination"} view={v} terms={terms.data} onJoined={setView} departed={departed} initialStop={presetStop.data} />
+        )}
 
         {isMember && roster ? (
           <Card className="p-5">
@@ -164,11 +179,15 @@ function FareCard({ pricing, meId, bookerName, isMember }: { pricing: RoutePrici
   );
 }
 
-function JoinPanel({ view, terms, onJoined, departed }: { view: TripView; terms: AgreementTerms | null; onJoined: (v: TripView) => void; departed: boolean }) {
+function JoinPanel({ view, terms, onJoined, departed, initialStop }: {
+  view: TripView; terms: AgreementTerms | null; onJoined: (v: TripView) => void; departed: boolean;
+  /** The place the rider searched for. Without one, the panel starts with the trip's own destination. */
+  initialStop?: Location | null;
+}) {
   const { trip, pickup, destination } = view;
   const regions = useRegions();
   const pickups = useLoad(() => api.pickups(), []);
-  const [stop, setStop] = useState<Location | null>(destination);
+  const [stop, setStop] = useState<Location | null>(initialStop ?? destination);
   const [accepted, setAccepted] = useState(false);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<ApiError | null>(null);

@@ -190,6 +190,7 @@ export class TripService {
     const rejection = plan?.rejected[0] ?? null;
     const fit: TripFit = {
       tripId: rec.id,
+      stop: destination,
       fits: !!plan && !rejection,
       reason: broken ? "DETOUR_LIMIT" : rejection?.reason ?? null,
       message: broken ? "This trip's route is already at its limit." : rejection?.message ?? null,
@@ -399,10 +400,10 @@ export class TripService {
     if (rec.status !== "open" || Date.parse(rec.departureTime) <= this.now().getTime()) throw new AppError("TRIP_CLOSED", "This trip is no longer accepting riders.");
     const destination = this.resolveDestination(rec, destinationLocationId);
     if (this.membership(rec.id, actorId)?.status === "confirmed") {
-      return { tripId: rec.id, fits: true, reason: null, message: null, route: this.routeOf(rec, actorId, false) };
+      return { tripId: rec.id, stop: destination, fits: true, reason: null, message: null, route: this.routeOf(rec, actorId, false) };
     }
     if (this.confirmed(rec.id).length >= rec.maxParticipants) {
-      return { tripId: rec.id, fits: false, reason: "MAX_STOPS", message: "This trip is full.", route: null };
+      return { tripId: rec.id, stop: destination, fits: false, reason: "MAX_STOPS", message: "This trip is full.", route: null };
     }
     return (await this.evaluateFit(rec, actorId, destination)).fit;
   }

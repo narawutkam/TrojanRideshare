@@ -175,3 +175,31 @@ describe("Fare estimates (docs/decisions.md D-011)", () => {
     }
   });
 });
+
+describe("Joining with the place you searched for", () => {
+  it("remembers which stop each result was checked for, so the trip page can open with it", async () => {
+    const s = setup();
+    const one = await s.trips.fitTrip(s.USER.hannah, TRIP.palladium, LOC.wiltern);
+    expect(one.stop?.id).toBe(LOC.wiltern);
+    const found = await s.trips.searchTrips(s.USER.hannah, { scope: "discover", destinationLocationId: LOC.wiltern });
+    const withFit = found.items.filter((v) => v.fit);
+    expect(withFit.length).toBeGreaterThan(0);
+    expect(withFit.every((v) => v.fit!.stop?.id === LOC.wiltern)).toBe(true);
+  });
+
+  it("gets you out at the searched place, not the trip's final destination", async () => {
+    const s = setup();
+    const v = await s.trips.joinTrip(s.USER.hannah, TRIP.palladium, { ...s.terms, destinationLocationId: LOC.wiltern });
+    const mine = v.route!.stops[v.route!.your!.order - 1];
+    expect(mine.location.id).toBe(LOC.wiltern);
+    expect(mine.isFinal).toBe(false);
+    expect(v.route!.stops[v.route!.stops.length - 1].location.id).toBe(LOC.palladium); // the car still ends at the Palladium
+    expect(s.db.participants.find((p) => p.tripId === TRIP.palladium && p.userId === s.USER.hannah)!.destinationLocationId).toBe(LOC.wiltern);
+  });
+
+  it("does not use the trip destination when no stop is given", async () => {
+    const s = setup();
+    const v = await s.trips.joinTrip(s.USER.hannah, TRIP.palladium, s.terms);
+    expect(v.route!.stops[v.route!.your!.order - 1].location.id).toBe(LOC.palladium);
+  });
+});

@@ -62,6 +62,7 @@ export const api = {
 
   searchLocations: (q: string) => request<Location[]>(`/api/locations/search${qs({ q })}`),
   pickups: () => get<Location[]>("/api/locations/pickups"),
+  getLocation: (id: string) => get<Location>(`/api/locations/${id}`),
   regions: () => get<Region[]>("/api/regions"),
   terms: () => get<AgreementTerms>("/api/terms"),
 

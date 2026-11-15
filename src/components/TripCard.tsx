@@ -14,11 +14,14 @@ export function TripCard({ view, actorId, extra, actions }: {
 }) {
   const { trip, pickup, destination, viewerMembership, route, fit } = view;
   const seatsLeft = Math.max(0, trip.maxParticipants - trip.participantCount);
-  const stops = route?.stops ?? [];
+  // After a destination search, show the route with the rider's own stop in it, not the trip as posted.
+  const shown = fit?.route ?? route;
+  const stops = shown?.stops ?? [];
   const last = stops[stops.length - 1]?.location ?? destination;
-  const via = stops.slice(0, -1).map((s) => s.location.name);
   const yours = fit?.route?.your;
+  const via = stops.slice(0, -1).map((s) => (yours?.order === s.order ? `${s.location.name} (your stop)` : s.location.name));
   const price = fit?.route?.pricing;
+  const tripHref = `/trips/${trip.id}${fit?.stop ? `?stop=${fit.stop.id}` : ""}`; // the trip page opens with this stop selected
 
   const body = (
     <>
@@ -36,13 +39,13 @@ export function TripCard({ view, actorId, extra, actions }: {
       {via.length > 0 && <p className="text-sm text-muted">via {via.join(", ")}</p>}
       <p className="mt-1 text-sm text-muted">
         {stops.length > 1 ? `${stops.length} stops` : "Direct"}
-        {route ? ` · about ${Math.round(route.totalMinutes)} min` : ""}
+        {shown ? ` · about ${Math.round(shown.totalMinutes)} min` : ""}
         {` · ${trip.status === "full" ? "no seats left" : `${seatsLeft} of ${trip.maxParticipants} seats open`}`}
         {trip.returnTripId ? " · return offered" : ""}
       </p>
       {yours && (
         <p className="mt-3 border-l-4 border-ok bg-[#eef6f0] px-3 py-2 text-[15px] text-ink">
-          <b className="font-semibold">Fits your stop.</b> About {Math.round(yours.rideMinutes)} min ride, {detourLabel(yours.detourMinutes)}
+          <b className="font-semibold">You get out at {fit?.stop?.name ?? "your stop"}.</b> About {Math.round(yours.rideMinutes)} min ride, {detourLabel(yours.detourMinutes)}
         </p>
       )}
       {price && price.yourShare !== null && (
@@ -63,7 +66,7 @@ export function TripCard({ view, actorId, extra, actions }: {
   if (!actions) {
     return (
       <article>
-        <Link href={`/trips/${trip.id}`} className="block rounded-sm border border-line bg-surface p-4 active:bg-field">{body}</Link>
+        <Link href={tripHref} className="block rounded-sm border border-line bg-surface p-4 active:bg-field">{body}</Link>
       </article>
     );
   }
