@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { LocationSearch } from "@/components/LocationSearch";
 import { detourLabel, RouteTimeline } from "@/components/RouteTimeline";
@@ -13,7 +13,7 @@ import { api, ApiError } from "@/lib/client/api";
 import { useCurrentUser, useLoad, useRegions } from "@/lib/client/hooks";
 import { money } from "@/lib/money";
 import { formatDateTime, formatTime } from "@/lib/time";
-import type { AgreementTerms, Location, RoutePricing, TripFit, TripView } from "@/types";
+import type { AgreementTerms, Location, RoutePricing, TripFit, TripRoute, TripView } from "@/types";
 
 /** Trip detail and signup (README R04, R05, R06): route, your stop, agreement, join, leave/cancel, party and chat. */
 export function TripDetailScreen({ tripId }: { tripId: string }) {
@@ -27,6 +27,8 @@ export function TripDetailScreen({ tripId }: { tripId: string }) {
   // Arriving from a destination search: the place the rider searched for is the stop to join with.
   const stopId = params.get("stop");
   const presetStop = useLoad(async () => (stopId ? api.getLocation(stopId).catch(() => null) : null), [stopId]);
+  // The route as it would be with the rider's stop in it, reported by the join panel while they pick a stop.
+  const [preview, setPreview] = useState<TripRoute | null>(null);
 
   if (view.loading && !view.data) return <AppShell back={{ href: "/trips", label: "Back to Find" }}><Loading /></AppShell>;
   if (view.error || !view.data) {
@@ -45,12 +47,17 @@ export function TripDetailScreen({ tripId }: { tripId: string }) {
   const departed = Date.parse(trip.departureTime) <= Date.now();
   const seatsLeft = Math.max(0, trip.maxParticipants - trip.participantCount);
   const setView = (nv: TripView) => view.setData(nv);
-  const stopCount = route?.stops.length ?? 1;
+  // Before joining, show the route with the rider's own stop in it. It is a preview, so it is only used when the
+  // stop differs from the trip's destination; otherwise the trip is shown as posted.
+  const previewStop = preview?.your ? preview.stops[preview.your.order - 1]?.location : null;
+  const previewing = !isMember && !!preview && !!previewStop && previewStop.id !== destination.id;
+  const shown = previewing ? preview : route;
+  const stopCount = shown?.stops.length ?? 1;
 
   return (
     <AppShell
       back={{ href: isMember ? "/my-trips" : "/trips", label: isMember ? "Back to My trips" : "Back to Find" }}
-      title={route?.stops[route.stops.length - 1]?.location.name ?? destination.name}
+      title={shown?.stops[shown.stops.length - 1]?.location.name ?? destination.name}
       subtitle={`${formatDateTime(trip.departureTime)} · from ${pickup.name}`}
     >
       <div className="grid gap-4">
@@ -81,20 +88,25 @@ export function TripDetailScreen({ tripId }: { tripId: string }) {
         <Card className="p-5">
           <div className="mb-5 flex items-baseline justify-between gap-3">
             <h2 className="text-xl font-bold">Route</h2>
-            <p className="text-sm text-muted">{stopCount === 1 ? "Direct" : `${stopCount} stops`}{route ? ` · about ${Math.round(route.totalMinutes)} min` : ""}</p>
+            <p className="text-sm text-muted">{stopCount === 1 ? "Direct" : `${stopCount} stops`}{shown ? ` · about ${Math.round(shown.totalMinutes)} min` : ""}</p>
           </div>
-          {route ? (
-            <RouteTimeline pickupName={pickup.name} departureTime={trip.departureTime} route={route} youId={me?.id} />
+          {previewing && previewStop && (
+            <p className="-mt-2 mb-5 border-l-4 border-gold bg-[#fff8d6] px-3 py-2 text-[15px] text-ink">
+              <b className="font-semibold">Preview with your stop at {previewStop.name}.</b> Join this trip to confirm it.
+            </p>
+          )}
+          {shown ? (
+            <RouteTimeline pickupName={pickup.name} departureTime={trip.departureTime} route={shown} youId={me?.id} />
           ) : (
             <p className="text-sm text-muted">Ride times aren&apos;t available for this trip.</p>
           )}
           <p className="mt-5 border-t border-line pt-3 text-xs leading-relaxed text-muted">
-            Times are estimates for the {formatTime(trip.departureTime)} departure. Nobody&apos;s ride runs more than {route?.maxDetourMinutes ?? 10} minutes longer than going straight to their stop.
+            Times are estimates for the {formatTime(trip.departureTime)} departure. Nobody&apos;s ride runs more than {shown?.maxDetourMinutes ?? 10} minutes longer than going straight to their stop.
           </p>
         </Card>
 
-        {route?.pricing && (
-          <FareCard pricing={route.pricing} meId={me?.id} isMember={isMember}
+        {shown?.pricing && (
+          <FareCard pricing={shown.pricing} meId={me?.id} isMember={isMember}
             bookerName={isBooker ? "You" : roster?.find((r) => r.userId === trip.bookerId)?.displayName ?? "The Booker"} />
         )}
 
@@ -118,7 +130,7 @@ export function TripDetailScreen({ tripId }: { tripId: string }) {
         {!isMember && trip.status !== "cancelled" && (
           stopId && presetStop.loading
             ? <Loading label="Loading your stop…" />
-            : <JoinPanel key={presetStop.data?.id ?? "trip-destination"} view={v} terms={terms.data} onJoined={setView} departed={departed} initialStop={presetStop.data} />
+            : <JoinPanel key={presetStop.data?.id ?? "trip-destination"} view={v} terms={terms.data} onJoined={setView} departed={departed} initialStop={presetStop.data} onPreview={setPreview} />
         )}
 
         {isMember && roster ? (
@@ -179,10 +191,12 @@ function FareCard({ pricing, meId, bookerName, isMember }: { pricing: RoutePrici
   );
 }
 
-function JoinPanel({ view, terms, onJoined, departed, initialStop }: {
+function JoinPanel({ view, terms, onJoined, departed, initialStop, onPreview }: {
   view: TripView; terms: AgreementTerms | null; onJoined: (v: TripView) => void; departed: boolean;
   /** The place the rider searched for. Without one, the panel starts with the trip's own destination. */
   initialStop?: Location | null;
+  /** Told the route with the rider's stop in it whenever the chosen stop fits, or null when it does not. */
+  onPreview: (route: TripRoute | null) => void;
 }) {
   const { trip, pickup, destination } = view;
   const regions = useRegions();
@@ -200,6 +214,12 @@ function JoinPanel({ view, terms, onJoined, departed, initialStop }: {
   const fit = useLoad<TripFit | null>(async () => (stop && checkable ? api.tripFit(trip.id, stop.id) : null), [trip.id, stop?.id, checkable]);
   const similar = `/create?destination=${stop?.id ?? destination.id}&name=${encodeURIComponent(stop?.name ?? destination.name)}&pickup=${pickup.id}`;
   const yours = fit.data?.route?.your;
+
+  // Let the Route card at the top of the page show this stop, and clear it when the panel goes away.
+  useEffect(() => {
+    onPreview(fit.data?.fits ? fit.data.route : null);
+    return () => onPreview(null);
+  }, [fit.data, onPreview]);
 
   if (departed || trip.status === "completed" || trip.status === "in_progress") return <Notice>This trip has departed.</Notice>;
   if (trip.status === "full") {
@@ -261,11 +281,8 @@ function JoinPanel({ view, terms, onJoined, departed, initialStop }: {
                 {(fit.data.route.pricing.yourSavings ?? 0) > 0.005 && ` (riding alone: ${money(fit.data.route.pricing.yourSoloPrice!)}, you save ${money(fit.data.route.pricing.yourSavings!)})`}.
               </span>
             )}
+            <span className="mt-1 block text-[13px] text-muted">Your stop is shown in the route above.</span>
           </Notice>
-          <div className="rounded-sm bg-field p-4">
-            <p className="mb-3 text-sm font-semibold">Route with your stop</p>
-            <RouteTimeline pickupName={pickup.name} departureTime={trip.departureTime} route={fit.data.route} />
-          </div>
         </div>
       )}
 
