@@ -32,7 +32,6 @@ export function CreateTripScreen() {
   const [departure, setDeparture] = useState(defaultDeparture(3));
   const [withReturn, setWithReturn] = useState(false);
   const [returnAt, setReturnAt] = useState(defaultDeparture(6));
-  const [ack, setAck] = useState(false);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<ApiError | null>(null);
 
@@ -47,7 +46,7 @@ export function CreateTripScreen() {
 
   const effectivePickup = pickupId || pickups.data?.[0]?.id || "";
   const outside = !!destination && !destination.regionId;
-  const canSubmit = !!effectivePickup && !!destination && !outside && !!departure && ack && !pending && (!withReturn || !!returnAt);
+  const canSubmit = !!effectivePickup && !!destination && !outside && !!departure && !pending && (!withReturn || !!returnAt);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -104,13 +103,10 @@ export function CreateTripScreen() {
           )}
         </div>
 
-        <label className="flex items-start gap-2 rounded-sm border border-line p-3 text-sm">
-          <input type="checkbox" className="mt-1 accent-cardinal" checked={ack} onChange={(e) => setAck(e.target.checked)} />
-          <span>
-            <b>I&apos;m the Booker.</b> I&apos;ll book and pay for the Uber on departure day and add the riders. {terms.data?.text}
-            {terms.data && <span className="block text-xs text-muted">Terms version {terms.data.version}</span>}
-          </span>
-        </label>
+        <div className="rounded-sm border border-line bg-field p-3 text-sm">
+          <b>You&apos;re the Booker for this trip.</b> As the creator, you book and pay for the Uber on departure day and add the riders, who split the fare with you. A cancellation fee may apply if you cancel close to departure. (Demo: no money is collected.)
+          {terms.data && <span className="mt-1 block text-xs text-muted">Terms version {terms.data.version}</span>}
+        </div>
 
         {error && (
           <Notice tone="error">
