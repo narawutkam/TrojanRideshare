@@ -53,6 +53,8 @@ Copy `.env.example` to `.env.local` (git-ignored). All settings are validated in
 | `ROUTE_MAX_DETOUR_MINUTES` | 10 | Most extra minutes any rider's ride may run past a direct ride. |
 | `UBER_PRICE_PER_MILE` | 2.50 | Placeholder price per road mile for fare estimates. |
 | `UBER_STOP_FEE` | 1.00 | Placeholder fee per extra stop. |
+| `KV_REST_API_URL`, `KV_REST_API_TOKEN` | empty | Redis for shared demo data on serverless hosting (Vercel's Redis integration sets these). Blank means process memory. `UPSTASH_REDIS_REST_*` also works. |
+| `DEMO_DATA_TTL_HOURS` | 6 | Hours before shared demo data is reseeded. |
 | `GOOGLE_MAPS_API_KEY` | empty | Optional. Turns on Google Places search and Google Routes drive times. Server-only; never prefix with `NEXT_PUBLIC_`. |
 
 Without a Google key, place search uses a seeded catalog of about 35 LA places and drive times use a distance and time-of-day model, so everything still works.
@@ -138,7 +140,7 @@ All are logged in `docs/decisions.md`; these are the ones most likely to change 
 - Notifications. The "you'll be notified when riders join" message is text only (D-007).
 - Real Uber total as an input to the fare split.
 - Chat is a 3-second poll in mock mode; a live version should use Supabase Realtime behind the same adapter in `useChatSubscription.ts`.
-- The rate limiter and demo data are per process. Both need a shared store before more than one server instance runs.
+- Demo data and the rate limiter. On Vercel the demo data is shared through a Redis snapshot (last write wins, reseeded every 6 hours), and the rate limiter is still per server. Neither is production grade; the real fix is the Supabase work above.
 - `docs/integration-log.md` has no entry yet for the routing, pricing and restyle work (the pull request description has the details).
 
 ## Traps
@@ -150,6 +152,8 @@ All are logged in `docs/decisions.md`; these are the ones most likely to change 
 - **Phone testing.** Another device can open `http://<mac address>:3000` only on the same Wi-Fi, and campus Wi-Fi often blocks device-to-device traffic. A phone hotspot works. The address changes with the network.
 - **The sign-in page stays a labeled demo.** It is styled like the USC sign-in but must not be made to look like the real thing or to collect real credentials.
 - **Seeded trips refresh once.** When a Google key is set, seeded trips replace their mock estimates with Google numbers after the first request, so the first screen can briefly show mock times.
+- **Check a deployment with `/api/health`.** It shows yes or no for the Google key and shared data, and the account menu has a status panel with a **Test Google** button that returns Google's own error message. A key kept only in `.env.local` never reaches Vercel; it must be added under Environment Variables and the project redeployed. Troubleshooting is in [docs/deploy-vercel.md](docs/deploy-vercel.md).
+- **Vercel needs Redis.** Without it, trips and joins can vanish between requests because each serverless server has its own memory. Every API handler goes through `withDemoStore` in `src/lib/services/index.ts`; new handlers must use `handle()` from `src/lib/api/http.ts`, and a handler that only reads should pass `{ readOnly: true }`. Anything that changes the data must not, or the change is not saved. Setup steps are in [docs/deploy-vercel.md](docs/deploy-vercel.md).
 
 ## Suggested next steps
 

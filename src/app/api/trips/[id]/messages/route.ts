@@ -13,7 +13,7 @@ export async function GET(req: Request, { params }: Ctx) {
     const { cursor } = readQuery(req, cursorOnlySchema);
     const { items, nextCursor } = getServices().messages.getMessages(actor.id, id, cursor);
     return ok(items, { nextCursor });
-  });
+  }, { readOnly: true });
 }
 
 /** POST /api/trips/:id/messages { content } → 201 ChatMessage */

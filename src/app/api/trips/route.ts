@@ -10,7 +10,7 @@ export async function GET(req: Request) {
     const query = readQuery(req, listTripsQuerySchema);
     const { items, nextCursor } = await getServices().trips.searchTrips(actor.id, query);
     return ok(items, { nextCursor });
-  });
+  }, { readOnly: true });
 }
 
 /** POST /api/trips → 201 TripView (Booker is the session user) */

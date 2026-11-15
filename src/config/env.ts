@@ -20,6 +20,8 @@ const schema = z.object({
   UBER_PRICE_PER_MILE: z.coerce.number().positive().default(2.5),
   /** Estimated fee per intermediate stop. Demo default; set the real fee. */
   UBER_STOP_FEE: z.coerce.number().nonnegative().default(1),
+  /** How long shared demo data lives before it is reseeded (seeded trips are dated from the seed moment). */
+  DEMO_DATA_TTL_HOURS: z.coerce.number().positive().default(6),
   GOOGLE_MAPS_API_KEY: z.string().optional(),
   NEXT_PUBLIC_SUPABASE_URL: z.string().optional(),
   NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().optional(),
@@ -34,6 +36,7 @@ export type AppConfig = {
   routeMaxDetourMinutes: number;
   pricePerMile: number;
   stopFee: number;
+  demoDataTtlHours: number;
   googleMapsApiKey?: string;
 };
 
@@ -59,6 +62,7 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
     routeMaxDetourMinutes: e.ROUTE_MAX_DETOUR_MINUTES,
     pricePerMile: e.UBER_PRICE_PER_MILE,
     stopFee: e.UBER_STOP_FEE,
+    demoDataTtlHours: e.DEMO_DATA_TTL_HOURS,
     googleMapsApiKey: e.GOOGLE_MAPS_API_KEY || undefined,
   };
 }

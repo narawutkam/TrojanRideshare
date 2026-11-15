@@ -11,7 +11,7 @@ export async function GET(_req: Request, { params }: Ctx) {
     const actor = await requireActor();
     const id = idSchema.parse((await params).id);
     return ok(getServices().trips.getTrip(actor.id, id));
-  });
+  }, { readOnly: true });
 }
 
 /** PATCH /api/trips/:id { status: "cancelled" } → 200 TripView (Booker only) */

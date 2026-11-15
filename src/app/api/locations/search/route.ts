@@ -11,5 +11,5 @@ export async function GET(req: Request) {
     const { q, cursor } = readQuery(req, searchLocationsSchema);
     const { items, nextCursor } = await getServices().locations.searchLocations(q, cursor);
     return ok(items, { nextCursor });
-  });
+  }); // not read-only: a search saves the places it finds, which later requests look up by id
 }

@@ -1,4 +1,5 @@
 import { ZodError, type ZodType, type ZodTypeDef } from "zod";
+import { withDemoStore } from "@/lib/services";
 import { AppError, HTTP_STATUS } from "@/lib/services/errors";
 import type { ApiFailure, ApiSuccess } from "@/types";
 
@@ -27,10 +28,13 @@ export function fail(err: unknown): Response {
   return Response.json(body, { status: HTTP_STATUS[code] });
 }
 
-/** Run a handler and wrap thrown errors in the failure envelope. */
-export async function handle(fn: () => Promise<Response> | Response): Promise<Response> {
+/**
+ * Run a handler and wrap thrown errors in the failure envelope. Handlers run against the shared demo data when
+ * it is configured for serverless hosting; pass `readOnly` for GET handlers so they skip the save.
+ */
+export async function handle(fn: () => Promise<Response> | Response, opts: { readOnly?: boolean } = {}): Promise<Response> {
   try {
-    return await fn();
+    return await withDemoStore(async () => fn(), opts);
   } catch (err) {
     return fail(err);
   }

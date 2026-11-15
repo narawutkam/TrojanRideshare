@@ -6,6 +6,8 @@ const nextConfig: NextConfig = {
   allowedDevOrigins: ["10.*.*.*", "192.168.*.*", "172.16.*.*", "*.local"],
   // The dev-mode "N" badge sits on top of the bottom tab bar; errors still show their overlay.
   devIndicators: false,
+  // Trace files from this project folder, not a parent that happens to hold another lockfile.
+  outputFileTracingRoot: process.cwd(),
 };
 
 export default nextConfig;

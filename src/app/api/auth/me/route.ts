@@ -3,5 +3,5 @@ import { requireActor } from "@/lib/auth/session";
 
 /** GET /api/auth/me → 200 User (private self view). */
 export async function GET() {
-  return handle(async () => ok(await requireActor()));
+  return handle(async () => ok(await requireActor()), { readOnly: true });
 }

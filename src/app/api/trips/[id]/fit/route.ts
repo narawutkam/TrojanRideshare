@@ -10,5 +10,5 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     const id = idSchema.parse((await params).id);
     const { destinationLocationId } = readQuery(req, fitQuerySchema);
     return ok(await getServices().trips.fitTrip(actor.id, id, destinationLocationId));
-  });
+  }, { readOnly: true });
 }

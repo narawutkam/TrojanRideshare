@@ -1,7 +1,7 @@
 "use client";
 
 import type {
-  AgreementTerms, ApiResponse, AttendanceReport, ChatMessage, CreateTripInput, ErrorCode, ListTripsQuery, Location, Region, TripFit, TripView, User,
+  AgreementTerms, ApiResponse, AttendanceReport, ChatMessage, CreateTripInput, ErrorCode, HealthInfo, ListTripsQuery, Location, Region, TripFit, TripView, User,
 } from "@/types";
 
 /** Typed browser client for the routes in README §5. Screens never call fetch directly. */
@@ -69,5 +69,6 @@ export const api = {
   sendMessage: (tripId: string, content: string) => send<ChatMessage>("POST", `/api/trips/${tripId}/messages`, { content }),
   reportNoShow: (tripId: string, subjectId: string) => send<AttendanceReport>("POST", `/api/trips/${tripId}/attendance-reports`, { subjectId, reason: "no_show" }),
 
+  health: (checkGoogle = false) => get<HealthInfo>(`/api/health${checkGoogle ? "?check=google" : ""}`),
   resetDemo: () => send<{ trips: number }>("POST", "/api/demo/reset"),
 };

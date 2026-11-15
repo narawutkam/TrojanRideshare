@@ -7,5 +7,5 @@ export async function GET() {
   return handle(async () => {
     await requireActor();
     return ok(getServices().locations.getPickups());
-  });
+  }, { readOnly: true });
 }

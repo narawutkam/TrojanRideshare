@@ -158,6 +158,23 @@ export interface AgreementTerms {
   maxDetourMinutes: number;
 }
 
+/** What a deployment is configured with, shown by GET /api/health. Yes/no and Google's own error text only; never a secret. */
+export interface HealthInfo {
+  mode: "mock" | "live";
+  googleKeyConfigured: boolean;
+  /** Redis for shared demo data on serverless hosting (docs/deploy-vercel.md). */
+  sharedDataConfigured: boolean;
+  environment: string | null;
+  region: string | null;
+  commit: string | null;
+  /** Present only for `?check=google`: one test call to each Google API. */
+  google?: {
+    configured: boolean;
+    places: { ok: boolean; httpStatus: number | null; detail: string } | null;
+    routes: { ok: boolean; httpStatus: number | null; detail: string } | null;
+  };
+}
+
 // ---------- API envelope (README §5) ----------
 
 export type ErrorCode =

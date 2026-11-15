@@ -1,3 +1,4 @@
+import { describeGoogleError } from "@/lib/maps/adapter";
 import { AppError } from "@/lib/services/errors";
 import { APP_TIME_ZONE } from "@/lib/time";
 
@@ -208,4 +209,27 @@ export function createGoogleTravelTimeProvider(apiKey: string, opts: GoogleRoute
     async matrix(points, departAt) { return complete((await both(points, departAt)).minutes); },
     async miles(points, departAt) { return complete((await both(points, departAt)).miles); },
   };
+}
+
+/** One small Routes API call, to show whether this key can compute drive times from this server. */
+export async function probeGoogleRoutes(apiKey: string, fetchImpl: typeof fetch = fetch): Promise<{ ok: boolean; httpStatus: number | null; detail: string }> {
+  const waypoint = (latitude: number, longitude: number) => ({ waypoint: { location: { latLng: { latitude, longitude } } } });
+  try {
+    const res = await fetchImpl("https://routes.googleapis.com/distanceMatrix/v2:computeRouteMatrix", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Goog-Api-Key": apiKey, "X-Goog-FieldMask": "originIndex,destinationIndex,duration,condition" },
+      body: JSON.stringify({
+        origins: [waypoint(34.0224, -118.2851)],
+        destinations: [waypoint(34.1016, -118.3267)],
+        travelMode: "DRIVE",
+        routingPreference: "TRAFFIC_AWARE",
+        departureTime: new Date(Date.now() + 3600_000).toISOString(),
+      }),
+      cache: "no-store",
+    });
+    if (!res.ok) return { ok: false, httpStatus: res.status, detail: await describeGoogleError(res) };
+    return { ok: true, httpStatus: res.status, detail: "OK" };
+  } catch {
+    return { ok: false, httpStatus: null, detail: "Could not reach Google from this server." };
+  }
 }

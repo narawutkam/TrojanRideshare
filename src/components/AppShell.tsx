@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { api } from "@/lib/client/api";
 import { useCurrentUser } from "@/lib/client/hooks";
+import type { HealthInfo } from "@/types";
 
 const TABS = [
   { href: "/trips", label: "Find", icon: <path d="M10.5 18a7.5 7.5 0 1 1 5.3-2.2L21 21" /> },
@@ -23,6 +24,24 @@ export function AppShell({ children, title, subtitle, back }: {
   const router = useRouter();
   const { data: user } = useCurrentUser();
   const [menu, setMenu] = useState(false);
+  const [health, setHealth] = useState<HealthInfo | null>(null);
+  const [testing, setTesting] = useState(false);
+
+  // What this deployment is connected to, shown in the account menu so a missing key is easy to spot.
+  useEffect(() => {
+    if (menu && !health) api.health().then(setHealth).catch(() => {});
+  }, [menu, health]);
+
+  async function testGoogle() {
+    setTesting(true);
+    try {
+      setHealth(await api.health(true));
+    } catch {
+      /* the menu keeps showing the last status */
+    } finally {
+      setTesting(false);
+    }
+  }
 
   async function signOut() {
     await api.logout().catch(() => {});
@@ -50,6 +69,22 @@ export function AppShell({ children, title, subtitle, back }: {
                 <div className="absolute right-0 top-11 z-40 w-60 rounded-sm border border-line border-t-[5px] border-t-cardinal bg-surface p-4 shadow-[0_2px_8px_rgba(0,0,0,0.18)]">
                   <p className="font-semibold">{user.displayName}</p>
                   <p className="truncate text-sm text-muted">{user.email}</p>
+                  <div className="mt-3 border-t border-line pt-3 text-sm">
+                    <p className="font-semibold">Status</p>
+                    <p className="text-muted">Places and drive times: {health ? (health.googleKeyConfigured ? "Google" : "built-in list and estimates") : "checking"}</p>
+                    <p className="text-muted">Demo data: {health ? (health.sharedDataConfigured ? "shared" : "this server only") : "checking"}</p>
+                    {health?.googleKeyConfigured && (
+                      <button onClick={testGoogle} disabled={testing} className="mt-2 min-h-11 w-full rounded-sm border border-field-border bg-white px-3 text-left font-medium hover:bg-field disabled:opacity-50">
+                        {testing ? "Testing Google…" : "Test Google"}
+                      </button>
+                    )}
+                    {health?.google?.configured && (
+                      <div className="mt-2 break-words text-[13px] leading-snug">
+                        <p><b className="font-semibold">Places:</b> {health.google.places?.detail}</p>
+                        <p className="mt-1"><b className="font-semibold">Routes:</b> {health.google.routes?.detail}</p>
+                      </div>
+                    )}
+                  </div>
                   <button onClick={signOut} className="mt-3 min-h-11 w-full rounded-sm border border-field-border bg-white px-3 text-left font-medium hover:bg-field">Sign out</button>
                 </div>
               )}

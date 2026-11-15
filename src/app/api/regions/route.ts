@@ -10,5 +10,5 @@ export async function GET(req: Request) {
     const { cursor } = readQuery(req, cursorOnlySchema);
     const { items, nextCursor } = getServices().locations.getRegions(cursor);
     return ok(items, { nextCursor });
-  });
+  }, { readOnly: true });
 }
