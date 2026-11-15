@@ -62,8 +62,8 @@ export function DiscoverScreen() {
     : "/create";
 
   return (
-    <AppShell title="Find a trip" subtitle="Search where you're going. We match it to an LA region and rank trips by how close they're headed.">
-      <section aria-label="Search and filters" className="grid gap-3 rounded-sm border border-line bg-surface p-4 sm:grid-cols-[2fr_1fr_1fr]">
+    <AppShell title="Find a trip" subtitle="Search where you're going. We'll match it to an LA region.">
+      <section aria-label="Search and filters" className="grid gap-3 rounded-sm border border-line bg-surface p-4">
         <Field label="Destination" htmlFor="dest">
           <LocationSearch id="dest" value={destination} onChange={setDestination} regionNames={regions} />
         </Field>

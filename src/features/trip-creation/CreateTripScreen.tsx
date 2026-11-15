@@ -72,7 +72,7 @@ export function CreateTripScreen() {
   if (pickups.error) return <AppShell title="Create a trip"><ErrorState error={pickups.error} onRetry={pickups.reload} /></AppShell>;
 
   return (
-    <AppShell title="Create a trip" subtitle="You'll be the Booker: you book and pay for the Uber on the day, and riders split the fare with you.">
+    <AppShell title="Create a trip" subtitle="You're the Booker: you book the Uber and riders split the fare.">
       <form onSubmit={submit} className="grid max-w-2xl gap-4 rounded-sm border border-line bg-surface p-5" noValidate>
         <Field label="Pickup" htmlFor="pickup">
           <select id="pickup" className={inputClass} value={effectivePickup} onChange={(e) => setPickupId(e.target.value)}>

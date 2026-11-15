@@ -33,7 +33,18 @@
 html, body {
   background: var(--color-canvas);
   color: var(--color-ink);
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+  overscroll-behavior-y: none;
 }
+
+/* Outside the phone column on wide screens. */
+@media (min-width: 32rem) {
+  body { background: color-mix(in srgb, var(--color-canvas) 85%, var(--color-ink)); }
+}
+
+/* iOS Safari zooms into inputs under 16px; keep form text at 16px. */
+input, select, textarea { font-size: 16px; }
 
 :focus-visible {
   outline: 3px solid var(--color-gold);

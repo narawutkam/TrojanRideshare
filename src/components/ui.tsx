@@ -19,14 +19,14 @@ export function Button({ variant = "primary", className = "", ...props }: Button
   return (
     <button
       {...props}
-      className={`inline-flex min-h-10 items-center justify-center gap-2 rounded-sm px-4 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 ${variants[variant]} ${className}`}
+      className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-sm px-4 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 ${variants[variant]} ${className}`}
     />
   );
 }
 
 export function ButtonLink({ href, variant = "primary", children, className = "" }: { href: string; variant?: Variant; children: ReactNode; className?: string }) {
   return (
-    <Link href={href} className={`inline-flex min-h-10 items-center justify-center gap-2 rounded-sm px-4 py-2 text-sm font-semibold transition ${variants[variant]} ${className}`}>
+    <Link href={href} className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-sm px-4 py-2 text-sm font-semibold transition ${variants[variant]} ${className}`}>
       {children}
     </Link>
   );
@@ -122,4 +122,4 @@ export function Field({ label, htmlFor, hint, error, children }: { label: string
   );
 }
 
-export const inputClass = "w-full rounded-sm border border-line bg-canvas px-3 py-2 text-sm text-ink";
+export const inputClass = "w-full min-h-11 rounded-sm border border-line bg-canvas px-3 py-2 text-base text-ink";

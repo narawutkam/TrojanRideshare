@@ -23,10 +23,10 @@ export function TripDetailScreen({ tripId }: { tripId: string }) {
   const returnLeg = useLoad(async () => (view.data?.trip.returnTripId ? api.getTrip(view.data.trip.returnTripId).catch(() => null) : null), [view.data?.trip.returnTripId]);
   const [showPosted, setShowPosted] = useState(params.has("created"));
 
-  if (view.loading && !view.data) return <AppShell title="Trip"><Loading /></AppShell>;
+  if (view.loading && !view.data) return <AppShell title="Trip" back={{ href: "/trips", label: "Back to Find" }}><Loading /></AppShell>;
   if (view.error || !view.data) {
     return (
-      <AppShell title="Trip">
+      <AppShell title="Trip" back={{ href: "/trips", label: "Back to Find" }}>
         {view.error?.code === "TRIP_NOT_FOUND" ? <Notice tone="warn">This trip doesn&apos;t exist or is no longer available. <Link href="/trips" className="font-semibold underline">Find another trip</Link></Notice>
           : view.error ? <ErrorState error={view.error} onRetry={view.reload} /> : null}
       </AppShell>
@@ -44,17 +44,18 @@ export function TripDetailScreen({ tripId }: { tripId: string }) {
 
   return (
     <AppShell
+      back={{ href: isMember ? "/my-trips" : "/trips", label: isMember ? "Back to My trips" : "Back to Find" }}
       title={destination.name}
       subtitle={
-        <span className="flex flex-wrap items-center gap-x-4 gap-y-1">
+        <span className="flex flex-wrap items-center gap-x-3 gap-y-0.5">
           <span>{formatDateTime(trip.departureTime)}</span>
           <span>From {pickup.name}</span>
-          {regionName && <span>Region: {regionName}</span>}
+          {regionName && <span>{regionName}</span>}
         </span>
       }
     >
-      <div className="grid gap-5 lg:grid-cols-[1fr_22rem]">
-        <div className="grid content-start gap-5">
+      <div className="grid gap-4">
+        <div className="contents">
           {showPosted && isBooker && (
             <div role="status" className="flex items-start gap-3 rounded-sm border-2 border-gold bg-surface p-4">
               <span aria-hidden className="grid h-9 w-9 shrink-0 place-items-center rounded-sm bg-gold text-lg">🔔</span>
@@ -91,13 +92,14 @@ export function TripDetailScreen({ tripId }: { tripId: string }) {
             )}
           </Card>
 
-          {isMember && roster && me && trip.status !== "cancelled" && (
-            <PartyChat tripId={trip.id} actorId={me.id} roster={roster} bookerId={trip.bookerId} onRosterStale={view.reload} />
-          )}
           {trip.status === "cancelled" && <Notice tone="warn">This trip was cancelled. Chat is closed and it no longer appears in search.</Notice>}
+
+          {!isMember && trip.status !== "cancelled" && (
+            <JoinPanel view={v} terms={terms.data} onJoined={setView} departed={departed} />
+          )}
         </div>
 
-        <aside className="grid content-start gap-5">
+        <div className="contents">
           {isMember && roster ? (
             <Card className="p-4">
               <h2 className="mb-2 font-bold">Party</h2>
@@ -115,16 +117,16 @@ export function TripDetailScreen({ tripId }: { tripId: string }) {
             </Card>
           ) : null}
 
-          {!isMember && trip.status !== "cancelled" && (
-            <JoinPanel view={v} terms={terms.data} onJoined={setView} departed={departed} />
+          {isMember && roster && me && trip.status !== "cancelled" && (
+            <PartyChat tripId={trip.id} actorId={me.id} roster={roster} bookerId={trip.bookerId} onRosterStale={view.reload} />
           )}
+
+          {isMember && isBooker && departed && roster && me && <NoShowReport tripId={trip.id} roster={roster} actorId={me.id} />}
 
           {isMember && !departed && trip.status !== "cancelled" && terms.data && (
             isBooker ? <CancelPanel view={v} onCancelled={setView} /> : <LeavePanel view={v} terms={terms.data} onLeft={setView} />
           )}
-
-          {isMember && isBooker && departed && roster && me && <NoShowReport tripId={trip.id} roster={roster} actorId={me.id} />}
-        </aside>
+        </div>
       </div>
     </AppShell>
   );

@@ -13,7 +13,7 @@ export function TripCard({ view, regionName, actorId, extra, actions }: {
   const { trip, pickup, destination, viewerMembership } = view;
   const seatsLeft = Math.max(0, trip.maxParticipants - trip.participantCount);
   return (
-    <article className="grid gap-3 rounded-sm border border-line bg-surface p-4 sm:grid-cols-[1fr_auto]">
+    <article className="grid gap-3 rounded-sm border border-line bg-surface p-4">
       <div className="min-w-0">
         <div className="mb-1 flex flex-wrap items-center gap-2">
           <TripStatusLabel status={trip.status} />
@@ -29,14 +29,14 @@ export function TripCard({ view, regionName, actorId, extra, actions }: {
         </p>
         {extra}
       </div>
-      <div className="flex flex-wrap items-end justify-between gap-3 sm:flex-col sm:items-end">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line pt-3">
         <div className="text-sm" aria-label={`${trip.participantCount} of ${trip.maxParticipants} seats taken`}>
           <div className="flex gap-1" aria-hidden>
             {Array.from({ length: trip.maxParticipants }, (_, i) => (
               <span key={i} className={`h-3 w-3 rounded-[2px] border ${i < trip.participantCount ? "border-cardinal bg-cardinal" : "border-line bg-canvas"}`} />
             ))}
           </div>
-          <p className="mt-1 text-xs text-muted sm:text-right">
+          <p className="mt-1 text-xs text-muted">
             {trip.participantCount}/{trip.maxParticipants} riders · {trip.status === "full" ? "no seats left" : `${seatsLeft} seat${seatsLeft === 1 ? "" : "s"} left`}
           </p>
         </div>
