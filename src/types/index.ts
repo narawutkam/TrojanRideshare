@@ -58,10 +58,63 @@ export interface TripParticipant {
   id: Id;
   tripId: Id;
   userId: Id;
+  /** Where this rider gets out. The Booker's is the trip destination (docs/decisions.md D-010). */
+  destinationLocationId: Id;
   status: ParticipantStatus;
   joinedAt: UtcTime;
   agreementAcceptedAt: UtcTime | null;
   agreementVersion: string | null;
+}
+
+/** One drop-off in the planned route (docs/decisions.md D-010). */
+export interface RouteStop {
+  order: number;
+  isFinal: boolean;
+  location: Location;
+  /** Minutes driven since the previous stop (or the pickup). */
+  legMinutes: number;
+  /** Minutes after departure until riders at this stop get out. */
+  rideMinutes: number;
+  /** Who gets out here. Null for nonmembers. */
+  riders: ParticipantSummary[] | null;
+}
+
+/** Estimated fare split for a route (docs/decisions.md D-011). Demo rates; nothing is charged. */
+export interface RoutePricing {
+  /** Estimated Uber fare for the whole route. */
+  estimatedTotal: number;
+  /** The viewer's share of it. Null if the viewer is not on the route. */
+  yourShare: number | null;
+  /** What the viewer would pay riding alone straight to their own stop. */
+  yourSoloPrice: number | null;
+  /** yourSoloPrice − yourShare. Positive means sharing is cheaper. */
+  yourSavings: number | null;
+  /** Everyone's share. Members only; null for nonmembers. */
+  shares: { userId: Id; displayName: string; amount: number }[] | null;
+  pricePerMile: number;
+}
+
+/** The car-train plan for a trip: stops in driving order, with times estimated for departure time. */
+export interface TripRoute {
+  stops: RouteStop[];
+  /** Minutes from departure until the last rider gets out. */
+  totalMinutes: number;
+  /** Most extra minutes any rider's ride may exceed their direct ride. */
+  maxDetourMinutes: number;
+  /** Estimated fares. Null if distances weren't available. */
+  pricing: RoutePricing | null;
+  /** The viewer's own stop and ride time. Null if the viewer is not on the route. */
+  your: { order: number; rideMinutes: number; directMinutes: number; detourMinutes: number } | null;
+}
+
+/** Whether a destination fits a trip's route, and the route if it did (docs/decisions.md D-010). */
+export interface TripFit {
+  tripId: Id;
+  fits: boolean;
+  reason: "MAX_STOPS" | "DETOUR_LIMIT" | null;
+  message: string | null;
+  /** The route including the viewer's stop. Present when it fits. */
+  route: TripRoute | null;
 }
 
 export interface TripView {
@@ -71,6 +124,10 @@ export interface TripView {
   viewerMembership: ParticipantStatus | null;
   /** Null for nonmembers. */
   roster: ParticipantSummary[] | null;
+  /** Planned stops and ride times. Null only if times could not be worked out. */
+  route: TripRoute | null;
+  /** Set when the list was searched by destination: does that destination fit this trip? */
+  fit?: TripFit;
 }
 
 export interface ChatMessage {
@@ -97,6 +154,8 @@ export interface AgreementTerms {
   text: string;
   /** Riders cannot leave within this many minutes of departure (docs/decisions.md D-003). */
   leaveCutoffMinutes: number;
+  /** Most extra minutes any rider's ride may exceed a direct ride (docs/decisions.md D-010). */
+  maxDetourMinutes: number;
 }
 
 // ---------- API envelope (README §5) ----------
@@ -113,6 +172,8 @@ export type ErrorCode =
   | "ACTIVE_TRIP_EXISTS"
   /** Proposed in docs/decisions.md D-003: no leaving inside the cutoff window. */
   | "LEAVE_WINDOW_CLOSED"
+  /** Proposed in docs/decisions.md D-010: the rider's stop would push a ride past the detour limit. */
+  | "ROUTE_DETOUR_EXCEEDED"
   | "AGREEMENT_REQUIRED"
   | "RATE_LIMITED"
   | "PROVIDER_UNAVAILABLE"
@@ -135,6 +196,7 @@ export type ApiResponse<T> = ApiSuccess<T> | ApiFailure;
 
 export interface ListTripsQuery {
   destinationLocationId?: Id;
+  pickupLocationId?: Id;
   regionId?: Id;
   from?: UtcTime;
   to?: UtcTime;
@@ -152,6 +214,8 @@ export interface CreateTripInput {
 export interface JoinTripInput {
   agreementAccepted: true;
   agreementVersion: string;
+  /** Where this rider gets out. Defaults to the trip destination. */
+  destinationLocationId?: Id;
 }
 
 export interface SendMessageInput {

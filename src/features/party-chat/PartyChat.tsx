@@ -70,7 +70,7 @@ export function PartyChat({ tripId, actorId, roster, bookerId, onRosterStale }: 
           return (
             <div key={m.id} className={`max-w-[80%] ${mine ? "self-end text-right" : "self-start"}`}>
               {!mine && <p className="mb-0.5 text-xs font-semibold text-muted">{name}{m.senderId === bookerId ? " · Booker" : ""}</p>}
-              <p className={`whitespace-pre-wrap break-words rounded-sm px-3 py-2 text-left text-sm ${mine ? "bg-cardinal text-white" : "bg-canvas"}`}>{m.content}</p>
+              <p className={`whitespace-pre-wrap break-words rounded-sm px-3.5 py-2 text-left text-[15px] ${mine ? "bg-cardinal text-white" : "bg-field"}`}>{m.content}</p>
               <p className="mt-0.5 text-[11px] text-muted">{formatTime(m.createdAt)}</p>
             </div>
           );

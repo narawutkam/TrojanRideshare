@@ -13,6 +13,7 @@ export const utcTimeSchema = z
 
 export const listTripsQuerySchema = z.object({
   destinationLocationId: idSchema.optional(),
+  pickupLocationId: idSchema.optional(),
   regionId: idSchema.optional(),
   from: utcTimeSchema.optional(),
   to: utcTimeSchema.optional(),
@@ -40,7 +41,10 @@ export const cancelTripSchema = z.object({ status: z.literal("cancelled") }).str
 export const joinTripSchema = z.object({
   agreementAccepted: z.boolean().optional(),
   agreementVersion: z.string().optional(),
+  destinationLocationId: idSchema.optional(),
 });
+
+export const fitQuerySchema = z.object({ destinationLocationId: idSchema });
 
 export const leaveTripSchema = z.object({}).strict();
 

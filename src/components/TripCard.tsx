@@ -2,46 +2,75 @@
 
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { detourLabel } from "@/components/RouteTimeline";
 import { MembershipLabel, TripStatusLabel } from "@/components/ui";
-import { formatDateTime } from "@/lib/time";
+import { money } from "@/lib/money";
+import { formatDay, formatTime } from "@/lib/time";
 import type { TripView } from "@/types";
 
-/** Shared trip summary card (README §2 "Reuse … TripCard"). */
-export function TripCard({ view, regionName, actorId, extra, actions }: {
-  view: TripView; regionName?: string; actorId?: string; extra?: ReactNode; actions?: ReactNode;
+/** Shared trip summary (README §2 "Reuse … TripCard"): departure time first, then where it goes. */
+export function TripCard({ view, actorId, extra, actions }: {
+  view: TripView; actorId?: string; extra?: ReactNode; actions?: ReactNode;
 }) {
-  const { trip, pickup, destination, viewerMembership } = view;
+  const { trip, pickup, destination, viewerMembership, route, fit } = view;
   const seatsLeft = Math.max(0, trip.maxParticipants - trip.participantCount);
-  return (
-    <article className="grid gap-3 rounded-sm border border-line bg-surface p-4">
-      <div className="min-w-0">
-        <div className="mb-1 flex flex-wrap items-center gap-2">
-          <TripStatusLabel status={trip.status} />
-          {regionName && <span className="rounded-sm bg-cardinal/10 px-2 py-0.5 text-xs font-semibold text-cardinal">{regionName}</span>}
+  const stops = route?.stops ?? [];
+  const last = stops[stops.length - 1]?.location ?? destination;
+  const via = stops.slice(0, -1).map((s) => s.location.name);
+  const yours = fit?.route?.your;
+  const price = fit?.route?.pricing;
+
+  const body = (
+    <>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="whitespace-nowrap text-[22px] font-bold leading-none tabular-nums">{formatTime(trip.departureTime)}</p>
+          <p className="mt-1 text-sm text-muted">{formatDay(trip.departureTime)}</p>
+        </div>
+        <div className="flex flex-wrap justify-end gap-1.5">
           <MembershipLabel status={viewerMembership} isBooker={actorId === trip.bookerId} />
-          {trip.returnTripId && <span className="rounded-sm border border-line px-2 py-0.5 text-xs">Return trip offered</span>}
+          <TripStatusLabel status={trip.status} />
         </div>
-        <h3 className="truncate text-lg font-bold">
-          <Link href={`/trips/${trip.id}`} className="hover:underline">{destination.name}</Link>
-        </h3>
-        <p className="text-sm text-muted">
-          {formatDateTime(trip.departureTime)} · from {pickup.name}
+      </div>
+      <p className="mt-3 text-[17px] font-semibold leading-snug">{pickup.name} → {last.name}</p>
+      {via.length > 0 && <p className="text-sm text-muted">via {via.join(", ")}</p>}
+      <p className="mt-1 text-sm text-muted">
+        {stops.length > 1 ? `${stops.length} stops` : "Direct"}
+        {route ? ` · about ${Math.round(route.totalMinutes)} min` : ""}
+        {` · ${trip.status === "full" ? "no seats left" : `${seatsLeft} of ${trip.maxParticipants} seats open`}`}
+        {trip.returnTripId ? " · return offered" : ""}
+      </p>
+      {yours && (
+        <p className="mt-3 border-l-4 border-ok bg-[#eef6f0] px-3 py-2 text-[15px] text-ink">
+          <b className="font-semibold">Fits your stop.</b> About {Math.round(yours.rideMinutes)} min ride, {detourLabel(yours.detourMinutes)}
         </p>
-        {extra}
-      </div>
-      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line pt-3">
-        <div className="text-sm" aria-label={`${trip.participantCount} of ${trip.maxParticipants} seats taken`}>
-          <div className="flex gap-1" aria-hidden>
-            {Array.from({ length: trip.maxParticipants }, (_, i) => (
-              <span key={i} className={`h-3 w-3 rounded-[2px] border ${i < trip.participantCount ? "border-cardinal bg-cardinal" : "border-line bg-canvas"}`} />
-            ))}
+      )}
+      {price && price.yourShare !== null && (
+        <div className="mt-3 flex items-end justify-between gap-3 border-t border-line pt-3">
+          <div>
+            <p className="text-[26px] font-bold leading-none tabular-nums">{money(price.yourShare)}</p>
+            <p className="mt-1 text-sm text-muted">your share, estimated</p>
           </div>
-          <p className="mt-1 text-xs text-muted">
-            {trip.participantCount}/{trip.maxParticipants} riders · {trip.status === "full" ? "no seats left" : `${seatsLeft} seat${seatsLeft === 1 ? "" : "s"} left`}
-          </p>
+          {price.yourSoloPrice !== null && price.yourSoloPrice > price.yourShare && (
+            <p className="text-right text-sm text-muted">Alone: <span className="line-through">{money(price.yourSoloPrice)}</span></p>
+          )}
         </div>
-        <div className="flex gap-2">{actions ?? <Link href={`/trips/${trip.id}`} className="text-sm font-semibold text-link hover:underline">View trip →</Link>}</div>
-      </div>
+      )}
+      {extra}
+    </>
+  );
+
+  if (!actions) {
+    return (
+      <article>
+        <Link href={`/trips/${trip.id}`} className="block rounded-sm border border-line bg-surface p-4 active:bg-field">{body}</Link>
+      </article>
+    );
+  }
+  return (
+    <article className="rounded-sm border border-line bg-surface p-4">
+      {body}
+      <div className="mt-4 grid gap-2">{actions}</div>
     </article>
   );
 }

@@ -4,12 +4,11 @@ import { AppShell } from "@/components/AppShell";
 import { TripCard } from "@/components/TripCard";
 import { ButtonLink, EmptyState, ErrorState, Loading, Notice } from "@/components/ui";
 import { api } from "@/lib/client/api";
-import { useCurrentUser, useLoad, useRegions } from "@/lib/client/hooks";
+import { useCurrentUser, useLoad } from "@/lib/client/hooks";
 import type { TripView } from "@/types";
 
 /** My Trips (README §1 demo scope): the actor's created and joined trips. */
 export function MyTripsScreen() {
-  const regions = useRegions();
   const { data: me } = useCurrentUser();
   const list = useLoad(async () => {
     const all: TripView[] = [];
@@ -31,30 +30,30 @@ export function MyTripsScreen() {
     const isBooker = v.trip.bookerId === me?.id;
     const note = v.viewerMembership === "cancelled" ? "You left this trip." : v.trip.status === "cancelled" ? "Cancelled by the Booker." : undefined;
     return (
-      <TripCard key={v.trip.id} view={v} actorId={me?.id} regionName={v.destination.regionId ? regions.get(v.destination.regionId) : undefined}
-        extra={note && <p className="mt-1 text-xs text-muted">{note}</p>}
+      <TripCard key={v.trip.id} view={v} actorId={me?.id}
+        extra={note && <p className="mt-2 text-sm text-muted">{note}</p>}
         actions={<ButtonLink href={`/trips/${v.trip.id}`} variant={upcoming.includes(v) ? "primary" : "secondary"}>
-          {upcoming.includes(v) ? (isBooker ? "Manage & chat" : "Open party & chat") : "View"}
+          {upcoming.includes(v) ? (isBooker ? "Manage trip and chat" : "Open party and chat") : "View"}
         </ButtonLink>} />
     );
   };
 
   return (
-    <AppShell title="My trips" subtitle="One upcoming trip at a time. Its return leg counts as the same trip.">
+    <AppShell title="My trips" subtitle="You can be in one upcoming trip at a time. A trip and its return count as one.">
       {list.loading && !list.data ? <Loading /> : list.error ? <ErrorState error={list.error} onRetry={list.reload} /> : (
         <div className="grid gap-8">
           <section className="grid gap-3">
-            <h2 className="text-lg font-bold">Upcoming</h2>
+            <h2 className="text-xl font-bold">Upcoming</h2>
             {upcoming.length ? upcoming.map(card) : (
               <EmptyState title="You're not in an upcoming trip">
                 <ButtonLink href="/trips">Find a trip</ButtonLink>
                 <ButtonLink href="/create" variant="secondary">Create one</ButtonLink>
               </EmptyState>
             )}
-            {upcoming.length > 0 && <Notice>Open a trip to chat with your party, leave it, or (as the Booker) cancel it.</Notice>}
+            {upcoming.length > 0 && <Notice>Open a trip to see the route, chat with your party, leave it or, as the Booker, cancel it.</Notice>}
           </section>
           <section className="grid gap-3">
-            <h2 className="text-lg font-bold">Past and cancelled</h2>
+            <h2 className="text-xl font-bold">Past and cancelled</h2>
             {past.length ? past.map(card) : <p className="text-sm text-muted">Nothing here yet.</p>}
           </section>
         </div>

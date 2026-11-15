@@ -8,7 +8,7 @@ export async function GET(req: Request) {
   return handle(async () => {
     const actor = await requireActor();
     const query = readQuery(req, listTripsQuerySchema);
-    const { items, nextCursor } = getServices().trips.listTrips(actor.id, query);
+    const { items, nextCursor } = await getServices().trips.searchTrips(actor.id, query);
     return ok(items, { nextCursor });
   });
 }
@@ -20,6 +20,6 @@ export async function POST(req: Request) {
     const actor = await requireActor();
     rateLimit(`create:${actor.id}`, 10);
     const input = await readJson(req, createTripSchema);
-    return ok(getServices().trips.createTrip(actor.id, input), { status: 201 });
+    return ok(await getServices().trips.createTrip(actor.id, input), { status: 201 });
   });
 }

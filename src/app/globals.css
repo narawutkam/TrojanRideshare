@@ -1,44 +1,57 @@
 @import "tailwindcss";
 
-/* USC color direction, matching the USC-SSO-style home page: light surfaces,
-   cardinal accents, USC-blue links and light-blue fields (README R10, §2).
-   The home page is light only, so the whole app stays light for consistency. */
+/* Look: modeled on the USC single sign-on card. White surfaces, a cardinal rule across the top,
+   regular-weight labels, white fields with a thin dark border, and almost square corners.
+   Cardinal marks the primary action and the active tab; gold is kept for small marks only
+   ("You're in", your own stop). Light only. */
 @theme {
   --color-cardinal: #990000;
   --color-cardinal-dark: #7a0000;
   --color-gold: #ffcc00;
   --color-surface: #ffffff;
   --color-canvas: #ffffff;
-  --color-shell: #efece7;   /* framing area outside the phone column on wide screens */
-  --color-field: #eef1f7;   /* input fill, as on the sign-in page */
-  --color-field-border: #8a8a8a;
-  --color-link: #2a6ebb;    /* USC-blue links, as on the sign-in page */
-  --color-ink: #1b1b1b;
+  --color-shell: #f6f6f4;       /* area outside the phone column on wide screens */
+  --color-field: #f4f4f2;       /* quiet fill for secondary areas */
+  --color-field-dark: #e8e8e5;
+  --color-field-border: #6b6b6b; /* the thin dark border on inputs */
+  --color-link: #990000;
+  --color-ink: #1c1c1c;
   --color-muted: #5f5f5f;
-  --color-line: #e3e0db;
+  --color-line: #dcdcd8;
   --color-ok: #1d6b3a;
   --color-warn: #8a4b00;
+  --color-info: #2a6ebb;
   --radius-sm: 3px;
-  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+html {
+  font-size: 17px; /* Source Sans runs small for its size */
+  background: var(--color-canvas);
+  -webkit-text-size-adjust: 100%;
 }
 
 html, body {
-  background: var(--color-canvas);
   color: var(--color-ink);
   -webkit-tap-highlight-color: transparent;
-  -webkit-text-size-adjust: 100%;
   overscroll-behavior-y: none;
 }
+
+body {
+  background: var(--color-canvas);
+  font-family: var(--font-source), "Source Sans Pro", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+h1, h2, h3 { letter-spacing: -0.005em; }
 
 /* Outside the phone column on wide screens. */
 @media (min-width: 32rem) {
   body { background: var(--color-shell); }
 }
 
-/* iOS Safari zooms into inputs under 16px; keep form text at 16px. */
-input, select, textarea { font-size: 16px; }
+/* iOS Safari zooms into inputs under 16px; keep form text at 17px. */
+input, select, textarea { font-size: 17px; }
 
 :focus-visible {
-  outline: 3px solid var(--color-gold);
+  outline: 2px solid var(--color-cardinal);
   outline-offset: 2px;
 }

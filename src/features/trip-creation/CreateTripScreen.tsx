@@ -71,8 +71,8 @@ export function CreateTripScreen() {
   if (pickups.error) return <AppShell title="Create a trip"><ErrorState error={pickups.error} onRetry={pickups.reload} /></AppShell>;
 
   return (
-    <AppShell title="Create a trip" subtitle="You're the Booker: you book the Uber and riders split the fare.">
-      <form onSubmit={submit} className="grid max-w-2xl gap-4 rounded-sm border border-line bg-surface p-5" noValidate>
+    <AppShell title="Create a trip" subtitle="You're the Booker. Riders heading the same way can add stops along your route.">
+      <form onSubmit={submit} className="grid gap-5" noValidate>
         <Field label="Pickup" htmlFor="pickup">
           <select id="pickup" className={inputClass} value={effectivePickup} onChange={(e) => setPickupId(e.target.value)}>
             {pickups.data?.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
@@ -85,15 +85,15 @@ export function CreateTripScreen() {
           <LocationSearch id="destination" value={destination} onChange={setDestination} regionNames={regions}
             placeholder={prefillName ? `e.g. ${prefillName}` : "Search a place in LA"} />
         </Field>
-        {destination?.regionId && <Notice tone="ok">Region: <b>{regions.get(destination.regionId)}</b></Notice>}
+        {destination?.regionId && <Notice tone="ok">In the <b>{regions.get(destination.regionId)}</b> ride region.</Notice>}
 
         <Field label="Departure (Los Angeles time)" htmlFor="departure">
           <input id="departure" type="datetime-local" className={inputClass} value={departure} onChange={(e) => setDeparture(e.target.value)} required />
         </Field>
 
-        <div className="grid gap-3 rounded-sm border border-line p-3">
-          <label className="flex items-start gap-2 text-sm">
-            <input type="checkbox" className="mt-1 accent-cardinal" checked={withReturn} onChange={(e) => setWithReturn(e.target.checked)} />
+        <div className="grid gap-3 rounded-sm border border-line p-4">
+          <label className="flex items-start gap-3 text-sm">
+            <input type="checkbox" className="mt-0.5 h-5 w-5 shrink-0 accent-cardinal" checked={withReturn} onChange={(e) => setWithReturn(e.target.checked)} />
             <span><b>Add an optional return trip.</b> It&apos;s listed as its own trip back to your pickup. Riders sign up for it separately.</span>
           </label>
           {withReturn && (
@@ -103,8 +103,10 @@ export function CreateTripScreen() {
           )}
         </div>
 
-        <div className="rounded-sm border border-line bg-field p-3 text-sm">
-          <b>You&apos;re the Booker for this trip.</b> As the creator, you book and pay for the Uber on departure day and add the riders, who split the fare with you. A cancellation fee may apply if you cancel close to departure. (Demo: no money is collected.)
+        <div className="rounded-sm bg-field p-4 text-sm leading-relaxed">
+          <b>You&apos;re the Booker for this trip.</b> You book and pay for the Uber on departure day and add the riders, who split the fare with you.
+          Other riders can add their own stops along the way, and nobody&apos;s ride will run more than {terms.data?.maxDetourMinutes ?? 10} minutes longer than going straight to their stop.
+          A cancellation fee may apply if you cancel close to departure. (Demo: no money is collected.)
           {terms.data && <span className="mt-1 block text-xs text-muted">Terms version {terms.data.version}</span>}
         </div>
 
@@ -115,9 +117,9 @@ export function CreateTripScreen() {
           </Notice>
         )}
 
-        <div className="flex flex-wrap gap-2">
+        <div className="grid gap-2">
           <Button type="submit" disabled={!canSubmit}>{pending ? "Posting…" : "Post trip"}</Button>
-          <Link href="/trips" className="inline-flex items-center px-3 text-sm text-muted hover:underline">Cancel</Link>
+          <Link href="/trips" className="inline-flex min-h-11 items-center justify-center text-sm font-semibold text-muted">Cancel</Link>
         </div>
       </form>
     </AppShell>

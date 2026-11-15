@@ -1,5 +1,6 @@
 import { fixtureId } from "@/lib/ids";
 import { regionIdFor } from "@/lib/regions/regions";
+import { estimateMatrix, estimateMiles } from "@/lib/routing/travel-time";
 import type { AttendanceReport, ChatMessage, Location, TripParticipant, User } from "@/types";
 
 /**
@@ -11,6 +12,17 @@ import type { AttendanceReport, ChatMessage, Location, TripParticipant, User } f
 /** Persisted lifecycle states; `full` is derived (README §3). */
 export type PersistedTripStatus = "open" | "in_progress" | "completed" | "cancelled";
 
+/**
+ * Drive minutes between the pickup (index 0) and each rider's drop-off (index i + 1), taken at
+ * departure time. The planned route is worked out from this on every read (docs/decisions.md D-010).
+ */
+export interface RouteMatrix {
+  userIds: string[];
+  minutes: number[][];
+  /** Road miles on the same grid, for pricing. */
+  miles: number[][];
+}
+
 export interface TripRecord {
   id: string;
   bookerId: string;
@@ -21,6 +33,7 @@ export interface TripRecord {
   status: PersistedTripStatus;
   returnTripId: string | null;
   createdAt: string;
+  routeMatrix: RouteMatrix | null;
 }
 
 export interface MockDb {
@@ -139,13 +152,13 @@ export function createFixtures(now: Date, capacity: number): MockDb {
   const trips: TripRecord[] = [];
   const participants: TripParticipant[] = [];
   let pn = 0;
-  const member = (tripId: string, userId: string, joinedAt = iso) => {
-    participants.push({ id: fixtureId("participant", ++pn), tripId, userId, status: "confirmed", joinedAt, agreementAcceptedAt: joinedAt, agreementVersion: "mock-terms-v1" });
+  const member = (tripId: string, userId: string, destinationLocationId: string, joinedAt = iso) => {
+    participants.push({ id: fixtureId("participant", ++pn), tripId, userId, destinationLocationId, status: "confirmed", joinedAt, agreementAcceptedAt: joinedAt, agreementVersion: "mock-terms-v1" });
   };
   const trip = (id: string, bookerId: string, pickup: string, dest: string, hours: number, riders: string[], extra: Partial<TripRecord> = {}) => {
     trips.push({ id, bookerId, pickupLocationId: pickup, destinationLocationId: dest, departureTime: at(hours), maxParticipants: capacity,
-      status: "open", returnTripId: null, createdAt: iso, ...extra });
-    [bookerId, ...riders].slice(0, capacity).forEach((u) => member(id, u));
+      status: "open", returnTripId: null, createdAt: iso, routeMatrix: null, ...extra });
+    [bookerId, ...riders].slice(0, capacity).forEach((u) => member(id, u, dest));
   };
 
   // One joinable ride to LAX (README §7 demo).
@@ -175,5 +188,14 @@ export function createFixtures(now: Date, capacity: number): MockDb {
     { id: fixtureId("report", 1), tripId: TRIP.pastDodgers, reporterId: USER.hannah, subjectId: USER.jordan, reason: "no_show", status: "pending", createdAt: at(-46) },
   ];
 
-  return { users, locations: catalogLocations(), trips, participants, messages, reports };
+  // Seeded trips all go to one place, so their routes are a single stop; times come from the mock estimator.
+  const locations = catalogLocations();
+  const place = (id: string) => locations.find((l) => l.id === id)!;
+  for (const t of trips) {
+    const members = participants.filter((p) => p.tripId === t.id && p.status === "confirmed");
+    const points = [place(t.pickupLocationId), ...members.map((m) => place(m.destinationLocationId))];
+    t.routeMatrix = { userIds: members.map((m) => m.userId), minutes: estimateMatrix(points, new Date(t.departureTime)), miles: estimateMiles(points) };
+  }
+
+  return { users, locations, trips, participants, messages, reports };
 }

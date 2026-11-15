@@ -2,6 +2,7 @@ import type { AppConfig } from "@/config/env";
 import { AppError } from "@/lib/services/errors";
 import type { MapsAdapter } from "@/lib/maps/adapter";
 import type { MockDb } from "@/lib/mock/fixtures";
+import type { TravelTimeProvider } from "@/lib/routing/travel-time";
 import type { Clock } from "@/lib/time";
 
 /**
@@ -14,6 +15,8 @@ export interface ServiceContext {
   clock: Clock;
   config: AppConfig;
   maps: MapsAdapter;
+  /** Drive times between places at a departure time (docs/decisions.md D-010). */
+  travel: TravelTimeProvider;
 }
 
 /** Opaque offset cursor, scoped to the query that produced it (README §5). */

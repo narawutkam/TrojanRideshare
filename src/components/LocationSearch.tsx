@@ -25,7 +25,8 @@ export function LocationSearch({ id, value, onChange, regionNames, placeholder =
   const [errorMsg, setErrorMsg] = useState("");
   const seq = useRef(0);
 
-  useEffect(() => { setText(value?.name ?? ""); }, [value]);
+  // Show the chosen place's name. Never clear the box when the value is reset: that happens as you start typing a new one.
+  useEffect(() => { if (value) setText(value.name); }, [value]);
 
   useEffect(() => {
     const q = text.trim();
@@ -68,13 +69,13 @@ export function LocationSearch({ id, value, onChange, regionNames, placeholder =
       />
       {open && text.trim().length >= 2 && text !== value?.name && (
         <ul id={listId} role="listbox" className="absolute left-0 right-0 top-full z-20 mt-1 max-h-72 overflow-auto rounded-sm border border-line bg-surface shadow-lg">
-          {status === "loading" && <li className="px-3 py-2 text-sm text-muted">Searching…</li>}
-          {status === "error" && <li className="px-3 py-2 text-sm text-cardinal">{errorMsg} Keep typing to retry.</li>}
-          {status === "idle" && !results.length && <li className="px-3 py-2 text-sm text-muted">No matching places.</li>}
+          {status === "loading" && <li className="px-4 py-3 text-sm text-muted">Searching…</li>}
+          {status === "error" && <li className="px-4 py-3 text-sm text-cardinal">{errorMsg} Keep typing to retry.</li>}
+          {status === "idle" && !results.length && <li className="px-4 py-3 text-sm text-muted">No matching places.</li>}
           {status === "idle" && results.map((r, i) => (
             <li key={r.id} role="option" aria-selected={i === active}
               onMouseDown={(e) => { e.preventDefault(); pick(r); }}
-              className={`flex cursor-pointer items-center justify-between gap-3 px-3 py-2 text-sm ${i === active ? "bg-canvas" : "hover:bg-canvas"}`}>
+              className={`flex cursor-pointer items-center justify-between gap-3 px-4 py-3 text-sm ${i === active ? "bg-field" : "hover:bg-field"}`}>
               <span className="min-w-0">
                 <span className="block truncate font-medium">{r.name}</span>
                 <span className="block truncate text-xs text-muted">{r.address}</span>

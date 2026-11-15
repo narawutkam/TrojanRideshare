@@ -7,8 +7,8 @@ import type { AgreementTerms } from "@/types";
 export async function GET() {
   return handle(async () => {
     await requireActor();
-    const { agreementVersion, leaveCutoffMinutes } = getConfig();
-    const terms: AgreementTerms = { version: agreementVersion, text: AGREEMENT_TEXT, leaveCutoffMinutes };
+    const { agreementVersion, leaveCutoffMinutes, routeMaxDetourMinutes } = getConfig();
+    const terms: AgreementTerms = { version: agreementVersion, text: AGREEMENT_TEXT, leaveCutoffMinutes, maxDetourMinutes: routeMaxDetourMinutes };
     return ok(terms);
   });
 }

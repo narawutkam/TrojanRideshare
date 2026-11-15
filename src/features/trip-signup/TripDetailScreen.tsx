@@ -4,29 +4,31 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { AppShell } from "@/components/AppShell";
-import { Button, ButtonLink, Card, Dialog, ErrorState, Loading, MembershipLabel, Notice, TripStatusLabel } from "@/components/ui";
+import { LocationSearch } from "@/components/LocationSearch";
+import { detourLabel, RouteTimeline } from "@/components/RouteTimeline";
+import { Button, ButtonLink, Card, Dialog, ErrorState, Field, inputClass, Loading, MembershipLabel, Notice, TripStatusLabel } from "@/components/ui";
 import { NoShowReport } from "@/features/attendance/NoShowReport";
 import { PartyChat } from "@/features/party-chat/PartyChat";
 import { api, ApiError } from "@/lib/client/api";
 import { useCurrentUser, useLoad, useRegions } from "@/lib/client/hooks";
+import { money } from "@/lib/money";
 import { formatDateTime, formatTime } from "@/lib/time";
-import type { AgreementTerms, TripView } from "@/types";
+import type { AgreementTerms, Location, RoutePricing, TripFit, TripView } from "@/types";
 
-/** Trip Detail and Signup (README R04, R05, R06): agreement, join, leave/cancel, roster and chat. */
+/** Trip detail and signup (README R04, R05, R06): route, your stop, agreement, join, leave/cancel, party and chat. */
 export function TripDetailScreen({ tripId }: { tripId: string }) {
   const router = useRouter();
   const params = useSearchParams();
-  const regions = useRegions();
   const { data: me } = useCurrentUser();
   const view = useLoad(() => api.getTrip(tripId), [tripId]);
   const terms = useLoad(() => api.terms(), []);
   const returnLeg = useLoad(async () => (view.data?.trip.returnTripId ? api.getTrip(view.data.trip.returnTripId).catch(() => null) : null), [view.data?.trip.returnTripId]);
   const [showPosted, setShowPosted] = useState(params.has("created"));
 
-  if (view.loading && !view.data) return <AppShell title="Trip" back={{ href: "/trips", label: "Back to Find" }}><Loading /></AppShell>;
+  if (view.loading && !view.data) return <AppShell back={{ href: "/trips", label: "Back to Find" }}><Loading /></AppShell>;
   if (view.error || !view.data) {
     return (
-      <AppShell title="Trip" back={{ href: "/trips", label: "Back to Find" }}>
+      <AppShell back={{ href: "/trips", label: "Back to Find" }}>
         {view.error?.code === "TRIP_NOT_FOUND" ? <Notice tone="warn">This trip doesn&apos;t exist or is no longer available. <Link href="/trips" className="font-semibold underline">Find another trip</Link></Notice>
           : view.error ? <ErrorState error={view.error} onRetry={view.reload} /> : null}
       </AppShell>
@@ -34,116 +36,157 @@ export function TripDetailScreen({ tripId }: { tripId: string }) {
   }
 
   const v = view.data;
-  const { trip, pickup, destination, viewerMembership, roster } = v;
+  const { trip, pickup, destination, viewerMembership, roster, route } = v;
   const isBooker = me?.id === trip.bookerId;
   const isMember = viewerMembership === "confirmed";
   const departed = Date.parse(trip.departureTime) <= Date.now();
-  const regionName = destination.regionId ? regions.get(destination.regionId) : undefined;
   const seatsLeft = Math.max(0, trip.maxParticipants - trip.participantCount);
   const setView = (nv: TripView) => view.setData(nv);
+  const stopCount = route?.stops.length ?? 1;
 
   return (
     <AppShell
       back={{ href: isMember ? "/my-trips" : "/trips", label: isMember ? "Back to My trips" : "Back to Find" }}
-      title={destination.name}
-      subtitle={
-        <span className="flex flex-wrap items-center gap-x-3 gap-y-0.5">
-          <span>{formatDateTime(trip.departureTime)}</span>
-          <span>From {pickup.name}</span>
-          {regionName && <span>{regionName}</span>}
-        </span>
-      }
+      title={route?.stops[route.stops.length - 1]?.location.name ?? destination.name}
+      subtitle={`${formatDateTime(trip.departureTime)} · from ${pickup.name}`}
     >
       <div className="grid gap-4">
-        <div className="contents">
-          {showPosted && isBooker && (
-            <div role="status" className="flex items-start gap-3 rounded-sm border-2 border-gold bg-surface p-4">
-              <span aria-hidden className="grid h-9 w-9 shrink-0 place-items-center rounded-sm bg-gold text-lg">🔔</span>
-              <div className="flex-1">
-                <p className="font-bold">Your trip is posted!</p>
-                <p className="text-sm text-muted">
-                  You&apos;ll get notified when more riders join. It&apos;s listed for other Trojans heading to {regionName ?? destination.name}, with {seatsLeft} open seat{seatsLeft === 1 ? "" : "s"}.
-                  {trip.returnTripId && " Your return trip is listed separately."}
-                </p>
-              </div>
-              <Button variant="secondary" onClick={() => { setShowPosted(false); router.replace(`/trips/${trip.id}`); }}>Got it</Button>
-            </div>
-          )}
+        {showPosted && isBooker && (
+          <div role="status" className="border-l-4 border-gold bg-field p-4">
+            <p className="font-bold">Your trip is posted.</p>
+            <p className="mt-1 text-sm">
+              You&apos;ll be notified when more riders join. Riders heading the same way can add stops, as long as nobody&apos;s ride runs more than {route?.maxDetourMinutes ?? 10} minutes past a direct one.
+              {trip.returnTripId && " Your return trip is listed separately."}
+            </p>
+            <button onClick={() => { setShowPosted(false); router.replace(`/trips/${trip.id}`); }} className="mt-2 min-h-11 text-sm font-semibold underline">Dismiss</button>
+          </div>
+        )}
 
-          <Card className="grid gap-3 p-4">
-            <div className="flex flex-wrap items-center gap-2">
-              <TripStatusLabel status={trip.status} />
-              <MembershipLabel status={viewerMembership} isBooker={isBooker} />
-            </div>
-            <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
-              <dt className="text-muted">Route</dt><dd>{pickup.name} → {destination.name}</dd>
-              <dt className="text-muted">Address</dt><dd>{destination.address}</dd>
-              <dt className="text-muted">Departure</dt><dd>{formatDateTime(trip.departureTime)} (Los Angeles)</dd>
-              <dt className="text-muted">Riders</dt><dd>{trip.participantCount} of {trip.maxParticipants} · {trip.status === "full" ? "full" : `${seatsLeft} seat${seatsLeft === 1 ? "" : "s"} left`}</dd>
-              <dt className="text-muted">Booker</dt><dd>{isBooker ? "You" : roster?.find((r) => r.userId === trip.bookerId)?.displayName ?? "Trip creator"} · books and pays for the Uber</dd>
-            </dl>
-            {returnLeg.data && (
-              <p className="border-t border-line pt-3 text-sm">
-                <b>Return trip:</b> {formatDateTime(returnLeg.data.trip.departureTime)} back to {returnLeg.data.destination.name}. It has its own seats and signup.{" "}
-                <Link href={`/trips/${returnLeg.data.trip.id}`} className="font-semibold text-link hover:underline">
-                  {returnLeg.data.viewerMembership === "confirmed" ? "Open return trip" : "View and join return"} →
-                </Link>
-              </p>
-            )}
+        <div className="flex flex-wrap items-center gap-1.5">
+          <TripStatusLabel status={trip.status} />
+          <MembershipLabel status={viewerMembership} isBooker={isBooker} />
+        </div>
+
+        <Card className="p-5">
+          <div className="mb-5 flex items-baseline justify-between gap-3">
+            <h2 className="text-xl font-bold">Route</h2>
+            <p className="text-sm text-muted">{stopCount === 1 ? "Direct" : `${stopCount} stops`}{route ? ` · about ${Math.round(route.totalMinutes)} min` : ""}</p>
+          </div>
+          {route ? (
+            <RouteTimeline pickupName={pickup.name} departureTime={trip.departureTime} route={route} youId={me?.id} />
+          ) : (
+            <p className="text-sm text-muted">Ride times aren&apos;t available for this trip.</p>
+          )}
+          <p className="mt-5 border-t border-line pt-3 text-xs leading-relaxed text-muted">
+            Times are estimates for the {formatTime(trip.departureTime)} departure. Nobody&apos;s ride runs more than {route?.maxDetourMinutes ?? 10} minutes longer than going straight to their stop.
+          </p>
+        </Card>
+
+        {route?.pricing && (
+          <FareCard pricing={route.pricing} meId={me?.id} isMember={isMember}
+            bookerName={isBooker ? "You" : roster?.find((r) => r.userId === trip.bookerId)?.displayName ?? "The Booker"} />
+        )}
+
+        <Card className="divide-y divide-line">
+          <div className="flex justify-between gap-4 px-5 py-3.5 text-[15px]"><span className="text-muted">Riders</span><span className="font-semibold">{trip.participantCount} of {trip.maxParticipants} · {trip.status === "full" ? "full" : `${seatsLeft} seat${seatsLeft === 1 ? "" : "s"} open`}</span></div>
+          <div className="flex justify-between gap-4 px-5 py-3.5 text-[15px]"><span className="text-muted">Booker</span><span className="text-right font-semibold">{isBooker ? "You" : roster?.find((r) => r.userId === trip.bookerId)?.displayName ?? "Trip creator"}</span></div>
+          <p className="px-5 py-3.5 text-sm text-muted">The Booker books and pays for the Uber and adds the riders.</p>
+        </Card>
+
+        {returnLeg.data && (
+          <Card className="p-5 text-sm">
+            <p><b>Return trip</b> · {formatDateTime(returnLeg.data.trip.departureTime)} back to {returnLeg.data.destination.name}. It has its own seats and signup.</p>
+            <Link href={`/trips/${returnLeg.data.trip.id}`} className="mt-2 inline-block min-h-11 py-2 font-semibold text-cardinal">
+              {returnLeg.data.viewerMembership === "confirmed" ? "Open return trip" : "View and join return"} →
+            </Link>
           </Card>
+        )}
 
-          {trip.status === "cancelled" && <Notice tone="warn">This trip was cancelled. Chat is closed and it no longer appears in search.</Notice>}
+        {trip.status === "cancelled" && <Notice tone="warn">This trip was cancelled. Chat is closed and it no longer appears in search.</Notice>}
 
-          {!isMember && trip.status !== "cancelled" && (
-            <JoinPanel view={v} terms={terms.data} onJoined={setView} departed={departed} />
-          )}
-        </div>
+        {!isMember && trip.status !== "cancelled" && <JoinPanel view={v} terms={terms.data} onJoined={setView} departed={departed} />}
 
-        <div className="contents">
-          {isMember && roster ? (
-            <Card className="p-4">
-              <h2 className="mb-2 font-bold">Party</h2>
-              <ul className="grid gap-2 text-sm">
-                {roster.map((r) => (
-                  <li key={r.userId} className="flex items-center gap-2">
-                    <span className="grid h-7 w-7 place-items-center rounded-sm bg-gold text-xs font-bold text-[#3a0000]">{r.displayName.split(" ").map((s) => s[0]).join("").slice(0, 2)}</span>
-                    <span>{r.displayName}</span>
-                    {r.userId === trip.bookerId && <span className="text-xs font-semibold text-cardinal">Booker</span>}
-                    {r.userId === me?.id && <span className="text-xs text-muted">(you)</span>}
-                  </li>
-                ))}
-              </ul>
-              {roster.length === 1 && isBooker && <p className="mt-3 text-xs text-muted">🔔 Waiting for riders. You&apos;ll get notified when someone joins.</p>}
-            </Card>
-          ) : null}
+        {isMember && roster ? (
+          <Card className="p-5">
+            <h2 className="mb-3 text-xl font-bold">Party</h2>
+            <ul className="grid gap-3">
+              {roster.map((r) => (
+                <li key={r.userId} className="flex items-center gap-3">
+                  <span className="grid h-10 w-10 place-items-center rounded-sm border border-field-border bg-white text-sm font-semibold">{r.displayName.split(" ").map((s) => s[0]).join("").slice(0, 2)}</span>
+                  <span className="font-medium">{r.displayName}{r.userId === me?.id && <span className="font-normal text-muted"> (you)</span>}</span>
+                  {r.userId === trip.bookerId && <span className="ml-auto rounded-[2px] bg-cardinal px-2 py-px text-[13px] font-semibold text-white">Booker</span>}
+                </li>
+              ))}
+            </ul>
+            {roster.length === 1 && isBooker && <p className="mt-4 text-sm text-muted">Waiting for riders. You&apos;ll be notified when someone joins.</p>}
+          </Card>
+        ) : null}
 
-          {isMember && roster && me && trip.status !== "cancelled" && (
-            <PartyChat tripId={trip.id} actorId={me.id} roster={roster} bookerId={trip.bookerId} onRosterStale={view.reload} />
-          )}
+        {isMember && roster && me && trip.status !== "cancelled" && (
+          <PartyChat tripId={trip.id} actorId={me.id} roster={roster} bookerId={trip.bookerId} onRosterStale={view.reload} />
+        )}
 
-          {isMember && isBooker && departed && roster && me && <NoShowReport tripId={trip.id} roster={roster} actorId={me.id} />}
+        {isMember && isBooker && departed && roster && me && <NoShowReport tripId={trip.id} roster={roster} actorId={me.id} />}
 
-          {isMember && !departed && trip.status !== "cancelled" && terms.data && (
-            isBooker ? <CancelPanel view={v} onCancelled={setView} /> : <LeavePanel view={v} terms={terms.data} onLeft={setView} />
-          )}
-        </div>
+        {isMember && !departed && trip.status !== "cancelled" && terms.data && (
+          isBooker ? <CancelPanel view={v} onCancelled={setView} /> : <LeavePanel view={v} terms={terms.data} onLeft={setView} />
+        )}
       </div>
     </AppShell>
   );
 }
 
+/** Estimated fare split. Members see everyone's share; others see only how it works. */
+function FareCard({ pricing, meId, bookerName, isMember }: { pricing: RoutePricing; meId?: string; bookerName: string; isMember: boolean }) {
+  return (
+    <Card className="p-5">
+      <div className="mb-4 flex items-baseline justify-between gap-3">
+        <h2 className="text-xl font-bold">Fare</h2>
+        <p className="text-sm text-muted">about {money(pricing.estimatedTotal)} total</p>
+      </div>
+      {isMember && pricing.shares ? (
+        <ul className="divide-y divide-line">
+          {pricing.shares.map((s) => (
+            <li key={s.userId} className="flex justify-between gap-4 py-2.5 text-[15px]">
+              <span>{s.userId === meId ? "You" : s.displayName}</span>
+              <span className="font-semibold tabular-nums">{money(s.amount)}</span>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="text-sm text-muted">Everyone aboard a stretch of the route splits its cost, so riders who get out earlier pay less.</p>
+      )}
+      <p className="mt-4 border-t border-line pt-3 text-xs leading-relaxed text-muted">
+        {isMember ? `${bookerName} pays Uber upfront and riders pay back their share. ` : ""}
+        Estimated at {money(pricing.pricePerMile)} per mile plus a fee per extra stop. The final split uses Uber&apos;s actual total. No money moves in this demo.
+      </p>
+    </Card>
+  );
+}
+
 function JoinPanel({ view, terms, onJoined, departed }: { view: TripView; terms: AgreementTerms | null; onJoined: (v: TripView) => void; departed: boolean }) {
   const { trip, pickup, destination } = view;
+  const regions = useRegions();
+  const pickups = useLoad(() => api.pickups(), []);
+  const [stop, setStop] = useState<Location | null>(destination);
   const [accepted, setAccepted] = useState(false);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<ApiError | null>(null);
-  const similar = `/create?destination=${destination.id}&name=${encodeURIComponent(destination.name)}&pickup=${pickup.id}`;
+
+  // A return leg heads back to campus, so the choices are campus drop-offs rather than a place search.
+  const isReturn = !!pickups.data?.some((p) => p.id === destination.id);
+  const returnChoices = pickups.data?.filter((p) => p.id !== pickup.id) ?? [];
+  const checkable = !!stop && (isReturn || !!stop.regionId);
+
+  const fit = useLoad<TripFit | null>(async () => (stop && checkable ? api.tripFit(trip.id, stop.id) : null), [trip.id, stop?.id, checkable]);
+  const similar = `/create?destination=${stop?.id ?? destination.id}&name=${encodeURIComponent(stop?.name ?? destination.name)}&pickup=${pickup.id}`;
+  const yours = fit.data?.route?.your;
 
   if (departed || trip.status === "completed" || trip.status === "in_progress") return <Notice>This trip has departed.</Notice>;
   if (trip.status === "full") {
     return (
-      <Card className="grid gap-3 p-4">
-        <h2 className="font-bold">This trip is full</h2>
+      <Card className="grid gap-3 p-5">
+        <h2 className="text-xl font-bold">This trip is full</h2>
         <p className="text-sm text-muted">Start your own trip to the same place and others can join you.</p>
         <ButtonLink href={similar}>Create a similar trip</ButtonLink>
       </Card>
@@ -151,11 +194,11 @@ function JoinPanel({ view, terms, onJoined, departed }: { view: TripView; terms:
   }
 
   async function join() {
-    if (!terms) return;
+    if (!terms || !stop) return;
     setPending(true);
     setError(null);
     try {
-      onJoined(await api.joinTrip(trip.id, terms.version));
+      onJoined(await api.joinTrip(trip.id, terms.version, stop.id));
     } catch (e) {
       setError(e instanceof ApiError ? e : new ApiError("INTERNAL_ERROR", "Could not join.", 500));
     } finally {
@@ -164,21 +207,62 @@ function JoinPanel({ view, terms, onJoined, departed }: { view: TripView; terms:
   }
 
   return (
-    <Card className="grid gap-3 p-4">
-      <h2 className="font-bold">Join this trip</h2>
-      <p className="text-sm text-muted">You&apos;ll meet at {pickup.name} at {formatTime(trip.departureTime)}. The Booker books the Uber and adds you to the fare split.</p>
-      <label className="flex items-start gap-2 rounded-sm border border-line p-3 text-sm">
-        <input type="checkbox" className="mt-1 accent-cardinal" checked={accepted} onChange={(e) => setAccepted(e.target.checked)} />
+    <Card className="grid gap-4 p-5">
+      <div>
+        <h2 className="text-xl font-bold">Join this trip</h2>
+        <p className="mt-1 text-sm text-muted">Meet at {pickup.name} at {formatTime(trip.departureTime)}.</p>
+      </div>
+
+      <Field label="Where are you getting out?" htmlFor="stop" hint={isReturn ? undefined : "Defaults to this trip's destination. Pick another place on the way if you like."}>
+        {isReturn ? (
+          <select id="stop" className={inputClass} value={stop?.id ?? ""} onChange={(e) => setStop(pickups.data?.find((p) => p.id === e.target.value) ?? null)}>
+            {[destination, ...returnChoices.filter((p) => p.id !== destination.id)].map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+          </select>
+        ) : (
+          <LocationSearch id="stop" value={stop} onChange={setStop} regionNames={regions} placeholder="Search a place in LA" />
+        )}
+      </Field>
+
+      {stop && !checkable && <Notice tone="warn">{stop.name} isn&apos;t inside a ride region, so this trip can&apos;t take you there.</Notice>}
+      {checkable && fit.loading && !fit.data && <p className="text-sm text-muted" role="status">Checking the route…</p>}
+      {checkable && fit.error && <Notice tone="error">{fit.error.message}</Notice>}
+      {fit.data && !fit.data.fits && (
+        <Notice tone="error">
+          {fit.data.message ?? "That stop doesn't fit this trip."}{" "}
+          <Link href={similar} className="font-semibold underline">Start a trip to {stop?.name}</Link>
+        </Notice>
+      )}
+      {fit.data?.fits && fit.data.route && yours && (
+        <div className="grid gap-3">
+          <Notice tone="ok">
+            <b>This fits.</b> You&apos;d ride about {Math.round(yours.rideMinutes)} min, {detourLabel(yours.detourMinutes)}.
+            {fit.data.route.pricing?.yourShare != null && (
+              <span className="mt-1 block">
+                Your share: about <b>{money(fit.data.route.pricing.yourShare)}</b>
+                {(fit.data.route.pricing.yourSavings ?? 0) > 0.005 && ` (riding alone: ${money(fit.data.route.pricing.yourSoloPrice!)}, you save ${money(fit.data.route.pricing.yourSavings!)})`}.
+              </span>
+            )}
+          </Notice>
+          <div className="rounded-sm bg-field p-4">
+            <p className="mb-3 text-sm font-semibold">Route with your stop</p>
+            <RouteTimeline pickupName={pickup.name} departureTime={trip.departureTime} route={fit.data.route} />
+          </div>
+        </div>
+      )}
+
+      <label className="flex items-start gap-3 text-sm">
+        <input type="checkbox" className="mt-0.5 h-5 w-5 shrink-0 accent-cardinal" checked={accepted} onChange={(e) => setAccepted(e.target.checked)} />
         <span><b>Billing agreement.</b> {terms?.text ?? "Loading terms…"} {terms && <span className="block text-xs text-muted">Version {terms.version}</span>}</span>
       </label>
       {error && (
         <Notice tone="error">
           {error.message}{" "}
+          {error.code === "ROUTE_DETOUR_EXCEEDED" && <Link href={similar} className="font-semibold underline">Start a trip to {stop?.name}</Link>}
           {error.code === "TRIP_FULL" && <Link href={similar} className="font-semibold underline">Create a similar trip</Link>}
           {error.code === "ACTIVE_TRIP_EXISTS" && <Link href="/my-trips" className="font-semibold underline">Go to My trips</Link>}
         </Notice>
       )}
-      <Button onClick={join} disabled={!accepted || pending || !terms}>{pending ? "Joining…" : "Join trip"}</Button>
+      <Button onClick={join} disabled={!accepted || pending || !terms || !fit.data?.fits}>{pending ? "Joining…" : "Join trip"}</Button>
     </Card>
   );
 }
@@ -204,7 +288,7 @@ function LeavePanel({ view, terms, onLeft }: { view: TripView; terms: AgreementT
   }
 
   return (
-    <Card className="grid gap-2 p-4">
+    <div className="grid gap-2">
       <Button variant="danger" onClick={() => setOpen(true)} disabled={locked}>{locked ? "Leaving is closed" : "Leave trip"}</Button>
       <p className="text-xs text-muted">
         {locked
@@ -212,14 +296,14 @@ function LeavePanel({ view, terms, onLeft }: { view: TripView; terms: AgreementT
           : `You can leave until ${formatTime(new Date(cutoff).toISOString())}. A cancellation fee may apply under the agreement.`}
       </p>
       <Dialog open={open} onClose={() => setOpen(false)} title="Leave this trip?">
-        <p className="text-sm text-muted">Your seat reopens for other riders. A cancellation fee may apply under the billing agreement.</p>
+        <p className="text-sm text-muted">Your seat reopens for other riders and the route is re-planned without your stop. A cancellation fee may apply under the billing agreement.</p>
         {error && <div className="mt-3"><Notice tone="error">{error}</Notice></div>}
-        <div className="mt-4 flex justify-end gap-2">
-          <Button variant="secondary" onClick={() => setOpen(false)}>Stay</Button>
+        <div className="mt-5 grid gap-2">
           <Button onClick={leave} disabled={pending}>{pending ? "Leaving…" : "Leave trip"}</Button>
+          <Button variant="secondary" onClick={() => setOpen(false)}>Stay</Button>
         </div>
       </Dialog>
-    </Card>
+    </div>
   );
 }
 
@@ -242,17 +326,17 @@ function CancelPanel({ view, onCancelled }: { view: TripView; onCancelled: (v: T
   }
 
   return (
-    <Card className="grid gap-2 p-4">
+    <div className="grid gap-2">
       <Button variant="danger" onClick={() => setOpen(true)}>Cancel trip</Button>
       <p className="text-xs text-muted">As the Booker you cancel the trip instead of leaving it. {view.trip.returnTripId && "The return trip is cancelled separately."}</p>
       <Dialog open={open} onClose={() => setOpen(false)} title="Cancel this trip?">
         <p className="text-sm text-muted">It will be removed from search, nobody can join, and party chat closes for everyone.</p>
         {error && <div className="mt-3"><Notice tone="error">{error}</Notice></div>}
-        <div className="mt-4 flex justify-end gap-2">
-          <Button variant="secondary" onClick={() => setOpen(false)}>Keep trip</Button>
+        <div className="mt-5 grid gap-2">
           <Button onClick={cancel} disabled={pending}>{pending ? "Cancelling…" : "Cancel trip"}</Button>
+          <Button variant="secondary" onClick={() => setOpen(false)}>Keep trip</Button>
         </div>
       </Dialog>
-    </Card>
+    </div>
   );
 }

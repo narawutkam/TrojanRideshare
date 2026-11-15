@@ -5,78 +5,69 @@ import { useEffect, useRef, type ButtonHTMLAttributes, type ReactNode } from "re
 import type { ApiError } from "@/lib/client/api";
 import type { ParticipantStatus, TripStatus } from "@/types";
 
-/** Shared controls: rectangular, minimally rounded, text paired with color (README §2). */
+/** Shared controls, in the style of the USC sign-in card: flat, near-square, regular-weight text (README §2). */
 
 type Variant = "primary" | "secondary" | "danger" | "gold";
 const variants: Record<Variant, string> = {
-  primary: "bg-cardinal text-white hover:bg-cardinal-dark border border-cardinal",
-  secondary: "bg-surface text-ink border border-line hover:bg-canvas",
-  danger: "bg-surface text-cardinal border border-cardinal/50 hover:bg-cardinal/5",
-  gold: "bg-gold text-[#3a0000] border border-gold hover:brightness-95",
+  primary: "border border-cardinal bg-cardinal text-white hover:bg-cardinal-dark active:bg-cardinal-dark",
+  secondary: "border border-field-border bg-white text-ink hover:bg-field active:bg-field",
+  danger: "border border-cardinal bg-white text-cardinal hover:bg-[#fbeeee] active:bg-[#fbeeee]",
+  gold: "border border-gold bg-gold text-ink hover:brightness-95",
 };
+const base = "inline-flex min-h-12 items-center justify-center gap-2 rounded-sm px-5 text-[17px] font-medium transition-colors";
 
 export function Button({ variant = "primary", className = "", ...props }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant }) {
-  return (
-    <button
-      {...props}
-      className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-sm px-4 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 ${variants[variant]} ${className}`}
-    />
-  );
+  return <button {...props} className={`${base} disabled:cursor-not-allowed disabled:opacity-45 ${variants[variant]} ${className}`} />;
 }
 
 export function ButtonLink({ href, variant = "primary", children, className = "" }: { href: string; variant?: Variant; children: ReactNode; className?: string }) {
-  return (
-    <Link href={href} className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-sm px-4 py-2 text-sm font-semibold transition ${variants[variant]} ${className}`}>
-      {children}
-    </Link>
-  );
+  return <Link href={href} className={`${base} ${variants[variant]} ${className}`}>{children}</Link>;
 }
 
+/** A panel with the cardinal rule across its top, like the sign-in card. */
 export function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
-  return <div className={`rounded-sm border border-line bg-surface ${className}`}>{children}</div>;
+  return <div className={`rounded-sm border border-line border-t-[5px] border-t-cardinal bg-surface shadow-[0_1px_3px_rgba(0,0,0,0.12)] ${className}`}>{children}</div>;
 }
 
 const tripStatusText: Record<TripStatus, string> = { open: "Open", full: "Full", in_progress: "In progress", completed: "Completed", cancelled: "Cancelled" };
 const tripStatusStyle: Record<TripStatus, string> = {
-  open: "border-ok/40 text-ok",
-  full: "border-warn/40 text-warn",
-  in_progress: "border-line text-ink",
+  open: "border-ok text-ok",
+  full: "border-warn text-warn",
+  in_progress: "border-ink text-ink",
   completed: "border-line text-muted",
-  cancelled: "border-cardinal/40 text-cardinal",
+  cancelled: "border-cardinal text-cardinal",
 };
 
+/** Flat outlined tag: a status reads as text with a thin rule, not a filled badge. */
 export function TripStatusLabel({ status }: { status: TripStatus }) {
-  return <span className={`inline-block rounded-sm border px-2 py-0.5 text-xs font-semibold ${tripStatusStyle[status]}`}>{tripStatusText[status]}</span>;
+  return <span className={`inline-block rounded-[2px] border bg-white px-2 py-px text-[13px] font-semibold ${tripStatusStyle[status]}`}>{tripStatusText[status]}</span>;
 }
 
 export function MembershipLabel({ status, isBooker }: { status: ParticipantStatus | null; isBooker?: boolean }) {
   if (status !== "confirmed") return null;
-  return (
-    <span className="inline-block rounded-sm border border-gold bg-gold/20 px-2 py-0.5 text-xs font-semibold text-ink">
-      {isBooker ? "You're the Booker" : "You're in"}
-    </span>
-  );
+  return <span className="inline-block rounded-[2px] border border-gold bg-gold px-2 py-px text-[13px] font-semibold text-ink">{isBooker ? "You're the Booker" : "You're in"}</span>;
 }
 
+/** A note with a bar down its left side, like the info banner on the sign-in page. */
 export function Notice({ tone = "info", children, role }: { tone?: "info" | "ok" | "warn" | "error"; children: ReactNode; role?: "status" | "alert" }) {
   const styles = {
-    info: "border-line bg-surface text-ink",
-    ok: "border-ok/40 bg-ok/10 text-ok",
-    warn: "border-warn/40 bg-warn/10 text-warn",
-    error: "border-cardinal/40 bg-cardinal/10 text-cardinal",
+    info: "border-info bg-[#f3f6fb]",
+    ok: "border-ok bg-[#eef6f0]",
+    warn: "border-warn bg-[#fbf3e8]",
+    error: "border-cardinal bg-[#fbeeee]",
   };
-  return <div role={role ?? (tone === "error" ? "alert" : "status")} className={`rounded-sm border px-3 py-2 text-sm ${styles[tone]}`}>{children}</div>;
+  return <div role={role ?? (tone === "error" ? "alert" : "status")} className={`border-l-4 px-4 py-3 text-[15px] leading-snug text-ink ${styles[tone]}`}>{children}</div>;
 }
 
 export function Loading({ label = "Loading…" }: { label?: string }) {
-  return <p className="py-8 text-center text-sm text-muted" role="status">{label}</p>;
+  return <p className="py-10 text-center text-[15px] text-muted" role="status">{label}</p>;
 }
 
 export function EmptyState({ title, children }: { title: string; children?: ReactNode }) {
   return (
-    <div className="rounded-sm border border-dashed border-line px-4 py-10 text-center">
-      <p className="font-semibold">{title}</p>
-      {children && <div className="mt-3 flex flex-wrap justify-center gap-2 text-sm text-muted">{children}</div>}
+    <div className="rounded-sm border border-line bg-field px-5 py-10 text-center">
+      <p className="text-lg font-semibold">{title}</p>
+      {children && <div className="mt-4 flex flex-wrap justify-center gap-2">{children}</div>}
     </div>
   );
 }
@@ -102,24 +93,26 @@ export function Dialog({ open, onClose, title, children }: { open: boolean; onCl
     if (!open && d.open) d.close();
   }, [open]);
   return (
-    <dialog ref={ref} onClose={onClose} className="m-auto w-[min(92vw,28rem)] rounded-sm border border-line bg-surface p-0 text-ink backdrop:bg-black/50">
-      <div className="p-5">
-        <h2 className="mb-3 text-lg font-bold">{title}</h2>
+    <dialog ref={ref} onClose={onClose} className="m-auto w-[min(92vw,26rem)] rounded-sm border-0 border-t-[5px] border-t-cardinal bg-surface p-0 text-ink backdrop:bg-black/50">
+      <div className="p-6">
+        <h2 className="mb-2 text-xl font-bold">{title}</h2>
         {children}
       </div>
     </dialog>
   );
 }
 
+/** Label above a field, in regular weight like the sign-in form. */
 export function Field({ label, htmlFor, hint, error, children }: { label: string; htmlFor: string; hint?: string; error?: string; children: ReactNode }) {
   return (
-    <div className="grid gap-1">
-      <label htmlFor={htmlFor} className="text-xs font-semibold uppercase tracking-wide text-muted">{label}</label>
+    <div className="grid gap-1.5">
+      <label htmlFor={htmlFor} className="text-lg">{label}</label>
       {children}
-      {hint && !error && <p className="text-xs text-muted">{hint}</p>}
-      {error && <p className="text-xs font-semibold text-cardinal" role="alert">{error}</p>}
+      {hint && !error && <p className="text-sm text-muted">{hint}</p>}
+      {error && <p className="text-sm font-semibold text-cardinal" role="alert">{error}</p>}
     </div>
   );
 }
 
-export const inputClass = "w-full min-h-11 rounded-sm border border-field-border bg-field px-3 py-2 text-base text-ink focus:border-cardinal focus:outline-none focus:ring-2 focus:ring-cardinal/30";
+/** White field with a thin dark border, as on the sign-in card. */
+export const inputClass = "w-full min-h-12 rounded-[2px] border border-field-border bg-white px-3.5 py-2 text-[17px] text-ink placeholder:text-muted focus:border-cardinal focus:outline-none focus:ring-2 focus:ring-cardinal/25";

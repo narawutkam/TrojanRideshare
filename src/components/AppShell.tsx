@@ -13,8 +13,8 @@ const TABS = [
 ];
 
 /**
- * Mobile-first app frame (README §1 "mobile-first app"): a phone-width column on every
- * screen size, compact top bar, and a bottom tab bar within thumb reach.
+ * Mobile-first app frame (README §1): a phone-width column, a plain white bar under a cardinal
+ * rule, a one-line demo note, and a flat tab bar within thumb reach. No fills, no shadows.
  */
 export function AppShell({ children, title, subtitle, back }: {
   children: ReactNode; title?: string; subtitle?: ReactNode; back?: { href: string; label: string };
@@ -31,53 +31,55 @@ export function AppShell({ children, title, subtitle, back }: {
 
   return (
     <div className="mx-auto flex min-h-dvh max-w-lg flex-col bg-canvas shadow-[0_0_0_1px_var(--color-line)]">
-      <header className="sticky top-0 z-30 bg-cardinal text-white pt-[env(safe-area-inset-top)]">
-        <div className="bg-gold px-3 py-0.5 text-center text-[11px] font-semibold text-[#3a0000]">Demo · simulated USC sign-in, places and terms · no payments</div>
-        <div className="flex h-12 items-center gap-2 px-3">
-          {back ? (
-            <Link href={back.href} aria-label={back.label} className="-ml-1 grid h-10 w-10 place-items-center rounded-sm hover:bg-white/10">
-              <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M15 5l-7 7 7 7" /></svg>
+      <header className="sticky top-0 z-30 border-b border-line bg-white pt-[env(safe-area-inset-top)]">
+        <div className="h-1.5 bg-cardinal" aria-hidden />
+        <div className="flex h-14 items-center gap-2 px-4">
+          {back && (
+            <Link href={back.href} aria-label={back.label} className="-ml-2 grid h-11 w-11 place-items-center rounded-sm hover:bg-field">
+              <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" aria-hidden><path d="M15 5l-7 7 7 7" /></svg>
             </Link>
-          ) : (
-            <span className="grid h-7 w-7 place-items-center rounded-sm bg-gold text-sm font-black text-cardinal" aria-hidden>T</span>
           )}
-          <span className="flex-1 truncate font-bold">{back ? title : "Trojan Rideshare"}</span>
+          <span className="flex-1 text-xl font-bold text-cardinal">Trojan Rideshare</span>
           {user && (
             <div className="relative">
               <button onClick={() => setMenu((m) => !m)} aria-expanded={menu} aria-label="Account"
-                className="grid h-9 w-9 place-items-center rounded-sm bg-gold text-xs font-bold text-[#3a0000]">
+                className="grid h-9 w-9 place-items-center rounded-sm border border-field-border bg-white text-sm font-semibold">
                 {user.displayName.split(" ").map((s) => s[0]).join("").slice(0, 2)}
               </button>
               {menu && (
-                <div className="absolute right-0 top-11 w-56 rounded-sm border border-line bg-surface p-3 text-sm text-ink shadow-lg">
+                <div className="absolute right-0 top-11 z-40 w-60 rounded-sm border border-line border-t-[5px] border-t-cardinal bg-surface p-4 shadow-[0_2px_8px_rgba(0,0,0,0.18)]">
                   <p className="font-semibold">{user.displayName}</p>
-                  <p className="truncate text-xs text-muted">{user.email}</p>
-                  <button onClick={signOut} className="mt-3 w-full rounded-sm border border-line px-3 py-2 text-left font-semibold hover:bg-canvas">Sign out</button>
+                  <p className="truncate text-sm text-muted">{user.email}</p>
+                  <button onClick={signOut} className="mt-3 min-h-11 w-full rounded-sm border border-field-border bg-white px-3 text-left font-medium hover:bg-field">Sign out</button>
                 </div>
               )}
             </div>
           )}
         </div>
-        {title && !back && (
-          <div className="px-4 pb-4">
-            <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
-            {subtitle && <div className="mt-0.5 text-sm opacity-90">{subtitle}</div>}
-          </div>
-        )}
-        {back && subtitle && <div className="px-4 pb-3 text-sm opacity-90">{subtitle}</div>}
+        <p className="border-t border-l-4 border-t-line border-l-info bg-[#f3f6fb] px-4 py-1.5 text-[13px] text-ink">
+          <b className="font-semibold">Demo.</b> Simulated sign-in and places. No payments.
+        </p>
       </header>
 
-      <main className="flex-1 px-3 py-4 pb-[calc(5rem+env(safe-area-inset-bottom))]">{children}</main>
+      <main className="flex-1 px-4 pb-[calc(6rem+env(safe-area-inset-bottom))] pt-6">
+        {title && (
+          <div className="mb-6">
+            <h1 className="text-[30px] font-bold leading-tight">{title}</h1>
+            {subtitle && <div className="mt-1 text-[17px] text-muted">{subtitle}</div>}
+          </div>
+        )}
+        {children}
+      </main>
 
-      <nav aria-label="Main" className="fixed inset-x-0 bottom-0 z-30 mx-auto max-w-lg border-t border-line bg-surface pb-[env(safe-area-inset-bottom)]">
+      <nav aria-label="Main" className="fixed inset-x-0 bottom-0 z-30 mx-auto max-w-lg border-t border-line bg-white pb-[env(safe-area-inset-bottom)]">
         <ul className="grid grid-cols-3">
           {TABS.map((t) => {
             const active = path.startsWith(t.href);
             return (
               <li key={t.href}>
                 <Link href={t.href} aria-current={active ? "page" : undefined}
-                  className={`flex h-16 flex-col items-center justify-center gap-1 text-xs font-semibold ${active ? "text-cardinal" : "text-muted"}`}>
-                  <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={active ? 2.6 : 2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>{t.icon}</svg>
+                  className={`flex h-16 flex-col items-center justify-center gap-1 border-t-[3px] text-[13px] font-semibold ${active ? "border-cardinal text-cardinal" : "border-transparent text-muted"}`}>
+                  <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={active ? 2.4 : 1.8} strokeLinecap="square" strokeLinejoin="miter" aria-hidden>{t.icon}</svg>
                   {t.label}
                 </Link>
               </li>
