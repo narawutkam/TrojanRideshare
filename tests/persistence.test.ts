@@ -78,6 +78,20 @@ describe("Upstash client", () => {
     expect(kvFromEnv({ KV_REST_API_URL: "https://x", KV_REST_API_TOKEN: "t" })).not.toBeNull();
     expect(kvFromEnv({ UPSTASH_REDIS_REST_URL: "https://x", UPSTASH_REDIS_REST_TOKEN: "t" })).not.toBeNull();
   });
+
+  it("finds the settings when Vercel added a prefix to their names", () => {
+    expect(kvFromEnv({ STORAGE_KV_REST_API_URL: "https://x", STORAGE_KV_REST_API_TOKEN: "t" })).not.toBeNull();
+    expect(kvFromEnv({ MY_DB_UPSTASH_REDIS_REST_URL: "https://x", MY_DB_UPSTASH_REDIS_REST_TOKEN: "t" })).not.toBeNull();
+  });
+
+  it("never uses the read-only token, because the app has to write", () => {
+    expect(kvFromEnv({ KV_REST_API_URL: "https://x", KV_REST_API_READ_ONLY_TOKEN: "readonly" })).toBeNull();
+    expect(kvFromEnv({ STORAGE_KV_REST_API_URL: "https://x", STORAGE_KV_REST_API_READ_ONLY_TOKEN: "readonly" })).toBeNull();
+  });
+
+  it("does not mistake unrelated variables for the settings", () => {
+    expect(kvFromEnv({ SOMETHING_URL: "https://x", OTHER_TOKEN: "t", KV_URL: "redis://x" })).toBeNull();
+  });
 });
 
 /** A fake Upstash endpoint backed by a Map. Several "servers" share one Map, like several Vercel instances share one database. */

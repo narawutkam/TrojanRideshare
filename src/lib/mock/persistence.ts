@@ -42,10 +42,22 @@ export function createUpstashKv(url: string, token: string, fetchImpl: typeof fe
   };
 }
 
-/** Vercel's Redis integration sets KV_REST_API_*; a direct Upstash database sets UPSTASH_REDIS_REST_*. */
+/**
+ * A setting by its standard name, or with any prefix Vercel may have added when the database was connected to the
+ * project (for example STORAGE_KV_REST_API_URL). The read-only token is never used: the app needs to write.
+ */
+function findEnv(env: Record<string, string | undefined>, names: string[]): string | undefined {
+  for (const name of names) if (env[name]) return env[name];
+  for (const [key, value] of Object.entries(env)) {
+    if (value && names.some((name) => key.endsWith(`_${name}`)) && !key.includes("READ_ONLY")) return value;
+  }
+  return undefined;
+}
+
+/** Vercel's Redis integration sets KV_REST_API_*; a direct Upstash database sets UPSTASH_REDIS_REST_*. Either may carry a prefix. */
 export function kvFromEnv(env: Record<string, string | undefined> = process.env): KvClient | null {
-  const url = env.KV_REST_API_URL ?? env.UPSTASH_REDIS_REST_URL;
-  const token = env.KV_REST_API_TOKEN ?? env.UPSTASH_REDIS_REST_TOKEN;
+  const url = findEnv(env, ["KV_REST_API_URL", "UPSTASH_REDIS_REST_URL"]);
+  const token = findEnv(env, ["KV_REST_API_TOKEN", "UPSTASH_REDIS_REST_TOKEN"]);
   return url && token ? createUpstashKv(url, token) : null;
 }
 

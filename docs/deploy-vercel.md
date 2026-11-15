@@ -53,7 +53,9 @@ While Google fails, search quietly falls back to the built-in places, so nothing
 
 **Every `/api/...` call returns 404.** That site is not this project's code. Check which repository and branch the Vercel project builds, and confirm the repository root contains `src/app/api`.
 
-**Trips or joins disappear, or differ between refreshes.** Shared demo data is not configured. The status reads "this server only". Add the Upstash Redis integration (step 3 above) and redeploy.
+**Trips, joins or searched places disappear, or differ between taps.** Shared demo data is not configured. The strip at the top says shared storage is not set up, and the status reads "this server only". This is because Vercel answers parallel requests from separate servers that do not share memory. Add the Upstash Redis integration (step 3 above) and redeploy.
+
+**I created the database but the variables are missing.** Creating a database does not always connect it to the project. In Vercel open the project, then **Storage**, open the database, and choose **Connect Project**, picking this project for Production and Preview. Afterwards **Settings, Environment Variables** should list `KV_REST_API_URL` and `KV_REST_API_TOKEN`. If you set a prefix while connecting, they appear as for example `STORAGE_KV_REST_API_URL`, which the app also accepts. Redeploy after connecting.
 
 ## Not covered
 
